@@ -3,8 +3,8 @@
 The customer-facing website for the online bookstore, built with **React, Vite and Tailwind CSS**.
 It talks to the API in `../server`.
 
-> **Status:** Step 1 of 6 - project scaffold, brand colours, API helper, home page placeholder.
-> Login, shelves, search, book pages, cart and checkout arrive in the following steps.
+> **Status:** Step 2 of 6 - scaffold, brand colours, API helper, and login/signup/account pages.
+> Shelves, search, book pages, cart and checkout arrive in the following steps.
 
 ## Requirements
 
@@ -53,8 +53,22 @@ client/
     ├── App.jsx           route table (URL -> page)
     ├── index.css         Tailwind import + brand design tokens
     ├── lib/api.js        fetch wrapper for all API calls
-    └── pages/            one file per page
+    ├── context/AuthContext.jsx   signed-in user state: useAuth()
+    ├── components/       Layout, Navbar, ProtectedRoute, FormField
+    └── pages/            HomePage, LoginPage, SignupPage, AccountPage
 ```
+
+## Authentication
+
+`src/context/AuthContext.jsx` keeps track of who is signed in. In any component:
+
+```jsx
+const { user, loading, login, signup, logout } = useAuth();
+```
+
+To make a page members-only, wrap it in `<ProtectedRoute>` in `App.jsx` (add `adminOnly`
+for admin pages). Visitors are sent to the login page and brought back afterwards.
+This only controls what the UI shows: the server enforces real permissions.
 
 ## Changing the look
 
