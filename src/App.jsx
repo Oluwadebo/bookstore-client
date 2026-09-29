@@ -2,12 +2,14 @@
  * Top-level route table. Each URL maps to one page component.
  * Pages inside <Layout> share the header and footer.
  * New pages are added here as they are built:
- *   /books/:slug (step 3), /cart and /checkout (step 4), /admin (step 5)...
+ *   /cart and /checkout (step 4), /admin (step 5)...
  */
 import { Routes, Route, Link } from "react-router-dom";
 import Layout from "./components/Layout.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import HomePage from "./pages/HomePage.jsx";
+import BrowsePage from "./pages/BrowsePage.jsx";
+import BookPage from "./pages/BookPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx";
 import AccountPage from "./pages/AccountPage.jsx";
@@ -29,6 +31,9 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/browse" element={<BrowsePage />} />
+        <Route path="/category/:slug" element={<BrowsePage />} />
+        <Route path="/books/:slug" element={<BookPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route

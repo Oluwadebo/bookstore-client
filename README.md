@@ -3,8 +3,8 @@
 The customer-facing website for the online bookstore, built with **React, Vite and Tailwind CSS**.
 It talks to the API in `../server`.
 
-> **Status:** Step 2 of 6 - scaffold, brand colours, API helper, and login/signup/account pages.
-> Shelves, search, book pages, cart and checkout arrive in the following steps.
+> **Status:** Step 3 of 6 - scaffold, brand colours, login/signup/account, and the storefront
+> (home, shelves, search, book pages). Cart and checkout arrive in the following steps.
 
 ## Requirements
 
@@ -52,11 +52,29 @@ client/
     ├── main.jsx          React entry, router setup
     ├── App.jsx           route table (URL -> page)
     ├── index.css         Tailwind import + brand design tokens
-    ├── lib/api.js        fetch wrapper for all API calls
+    ├── lib/
+    │   ├── api.js        fetch wrapper for all API calls
+    │   ├── useApi.js     hook: load data from the API
+    │   ├── format.js     price formatting
+    │   └── usePageTitle.js  browser tab titles
     ├── context/AuthContext.jsx   signed-in user state: useAuth()
-    ├── components/       Layout, Navbar, ProtectedRoute, FormField
-    └── pages/            HomePage, LoginPage, SignupPage, AccountPage
+    ├── components/       Layout, Navbar, SearchBar, BookCard, BookGrid, BookCover,
+    │                     CategoryChips, Pagination, ProtectedRoute, FormField
+    └── pages/            HomePage, BrowsePage, BookPage, LoginPage, SignupPage, AccountPage
 ```
+
+## Storefront pages
+
+| URL | Page |
+|---|---|
+| `/` | Hero with search, shelves, featured books, new arrivals |
+| `/browse` | All books. `?search=`, `?sort=` and `?page=` are read from the address |
+| `/category/:slug` | One shelf (same page as `/browse`, filtered) |
+| `/books/:slug` | Book details and related titles |
+
+Shelves, chips and menus come from the database, so adding a category (for example a
+non-fiction or educational shelf) makes it appear everywhere with no code change.
+Books without a cover image get a colourful generated cover, so the shelves always look lively.
 
 ## Authentication
 

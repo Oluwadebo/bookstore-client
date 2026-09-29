@@ -1,60 +1,89 @@
 /**
- * Temporary home page for step 1. It proves three things work:
- *   1. React + Tailwind and the brand colours render.
- *   2. The layout is responsive (resize the window or open it on a phone).
- *   3. The client can reach the API (calls /api/health).
- * The real storefront (shelves, search, featured books) replaces this in step 3.
+ * Home page (/): hero with search, the shelves, featured books and new arrivals.
+ * Everything comes from the API, so content changes made in the admin area
+ * (step 5) show up here without touching code.
  */
-import { useEffect, useState } from "react";
-import { api } from "../lib/api.js";
+import { Link } from "react-router-dom";
+import BookGrid from "../components/BookGrid.jsx";
+import SearchBar from "../components/SearchBar.jsx";
+import { useApi } from "../lib/useApi.js";
+import { usePageTitle } from "../lib/usePageTitle.js";
 
-const SWATCHES = [
-  { name: "Coral", className: "bg-coral" },
-  { name: "Sunshine", className: "bg-sunshine" },
-  { name: "Teal", className: "bg-teal" },
-  { name: "Grape", className: "bg-grape" },
-  { name: "Navy", className: "bg-navy" },
-];
+function Section({ title, action, children }) {
+  return (
+    <section className="mx-auto max-w-6xl px-4 py-10">
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <h2 className="font-display text-2xl font-bold sm:text-3xl">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export default function HomePage() {
-  // "loading" | "ok" | "error"
-  const [status, setStatus] = useState("loading");
-
-  useEffect(() => {
-    api("/api/health")
-      .then((data) => setStatus(data.database === "connected" ? "ok" : "error"))
-      .catch(() => setStatus("error"));
-  }, []);
-
-  const statusText = {
-    loading: "Checking the server...",
-    ok: "Server and database connected",
-    error: "Cannot reach the server. Is it running on port 5000?",
-  }[status];
+  usePageTitle("");
+  const shelves = useApi("/api/categories");
+  const featured = useApi("/api/books?featured=true&limit=4");
+  const newest = useApi("/api/books?limit=8");
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-16 sm:py-24">
-      <h1 className="font-display text-4xl font-bold sm:text-6xl">
-        Your next favourite <span className="text-coral">read</span> is waiting.
-      </h1>
-      <p className="mt-4 max-w-xl text-lg">Setup complete. The storefront is built out in the next steps.</p>
-
-      {/* Palette preview: 2 columns on phones, 5 on larger screens */}
-      <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {SWATCHES.map((s) => (
-          <div key={s.name} className={`${s.className} rounded-2xl px-4 py-8 text-center font-semibold text-white`}>
-            {s.name}
+    <>
+      {/* Hero */}
+      <section className="bg-coral">
+        <div className="mx-auto max-w-6xl px-4 py-14 sm:py-20">
+          <h1 className="max-w-2xl font-display text-4xl font-bold leading-tight text-navy sm:text-6xl">
+            Your next favourite read is one search away.
+          </h1>
+          <p className="mt-4 max-w-xl text-lg text-navy">Digital books, delivered the moment you check out.</p>
+          <div className="mt-8 max-w-xl">
+            <SearchBar large />
           </div>
-        ))}
-      </div>
+        </div>
+      </section>
 
-      <p
-        className={`mt-8 inline-block rounded-full px-4 py-2 text-sm font-semibold ${
-          status === "ok" ? "bg-teal text-white" : status === "error" ? "bg-coral text-white" : "bg-sunshine"
-        }`}
+      {/* Shelves */}
+      <Section title="Browse the shelves">
+        {shelves.error && <p role="alert">Could not load the shelves. {shelves.error}</p>}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {shelves.data?.categories.map((category) => (
+            <Link
+              key={category._id}
+              to={`/category/${category.slug}`}
+              // A thick top border in the shelf's own colour keeps the page colourful and the text readable.
+              style={{ borderTopColor: category.color }}
+              className="rounded-2xl border-t-8 bg-white p-5 shadow-sm transition-transform hover:-translate-y-1"
+            >
+              <h3 className="font-display text-xl font-bold">{category.name}</h3>
+              <p className="mt-1 line-clamp-2 text-sm opacity-80">{category.description}</p>
+              <p className="mt-3 text-sm font-semibold">
+                {category.bookCount} {category.bookCount === 1 ? "book" : "books"}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </Section>
+
+      {/* Featured */}
+      {featured.data?.books.length > 0 && (
+        <Section title="Featured reads">
+          <BookGrid books={featured.data.books} />
+        </Section>
+      )}
+
+      {/* New arrivals */}
+      <Section
+        title="New arrivals"
+        action={
+          <Link to="/browse" className="text-sm font-semibold underline">
+            See all books
+          </Link>
+        }
       >
-        {statusText}
-      </p>
-    </main>
+        {newest.loading && !newest.data && <p>Loading books...</p>}
+        {newest.error && <p role="alert">Could not load books. Is the server running?</p>}
+        {newest.data && <BookGrid books={newest.data.books} />}
+      </Section>
+    </>
   );
 }
