@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Temporary placeholder icon (open book). The final logo replaces this in step 6. -->
+  <rect width="64" height="64" rx="14" fill="#FF6B5A"/>
+  <path d="M32 18c-5-3-12-3-18-1v28c6-2 13-2 18 1 5-3 12-3 18-1V17c-6-2-13-2-18 1z" fill="#FFF8EE"/>
+  <path d="M32 18v28" stroke="#FF6B5A" stroke-width="3"/>
+</svg>
