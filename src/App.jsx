@@ -22,6 +22,7 @@ import AdminBooks from "./pages/admin/AdminBooks.jsx";
 import AdminBookForm from "./pages/admin/AdminBookForm.jsx";
 import AdminCategories from "./pages/admin/AdminCategories.jsx";
 import AdminOrders from "./pages/admin/AdminOrders.jsx";
+import AdminTeam from "./pages/admin/AdminTeam.jsx";
 
 function NotFound() {
   return (
@@ -85,6 +86,15 @@ export default function App() {
           <Route path="books/:id" element={<AdminBookForm />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
+          {/* The site owner decides who else may be an admin. */}
+          <Route
+            path="team"
+            element={
+              <ProtectedRoute ownerOnly>
+                <AdminTeam />
+              </ProtectedRoute>
+            }
+          />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

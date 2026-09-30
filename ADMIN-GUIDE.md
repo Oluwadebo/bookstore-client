@@ -8,8 +8,7 @@ How to run your bookstore day to day. No coding needed.
 2. Use your admin email and password.
 3. An **Admin** link appears in the top menu (on a phone: open **Hi, yourname**, then **Open admin area**).
 
-To let another person manage the store, they first sign up normally. Then whoever looks after
-the server runs `npm run make-admin -- their@email.com` in the `server` folder.
+You are the **site owner**: you have the final say on everything. See *Your team* below to let other people help.
 
 ## Adding a book
 
@@ -31,7 +30,7 @@ store won't let you publish a book that has no file.
 - To hide a book from the store, untick **Published**. People who already bought it keep their copy.
 - To fix the book's file, use **Replace the file.** Past customers get the new version.
 - **Feature on the home page** puts it in the "Featured reads" row.
-- A book that customers have bought **cannot be deleted**. Unpublish it instead.
+- Only the owner can delete a book, and a book that customers have bought **cannot be deleted**. Unpublish it instead.
 
 ## Shelves (categories)
 
@@ -40,7 +39,32 @@ a short description. To start selling non-fiction or educational books, add a sh
 tick it on the books. It appears across the store automatically. No redesign is needed.
 
 - A shelf can sit **inside** another shelf (for example *Cookery* inside *Non-fiction*).
-- A shelf that still has books can't be deleted. Move the books first.
+- Only the owner can delete shelves, and a shelf that still has books can't be deleted. Move the books first.
+
+## Your team (owner only)
+
+**Letting someone help:**
+1. They sign up on your website like any customer.
+2. On their **Account** page they click **Apply to be an admin** and can add a short message.
+3. You see a badge on the **Team** tab (and a banner on the Dashboard). Open **Admin > Team**.
+4. Read the application, then **Approve** or **Decline**. You are asked to confirm first.
+5. Approved people can use the admin area straight away. Declined people can apply again after 7 days.
+
+**What admins can and can't do**
+
+| | Admin | You (owner) |
+|---|---|---|
+| Add and edit books, upload covers and files, publish or unpublish | Yes | Yes |
+| Add and edit shelves, view orders | Yes | Yes |
+| Delete books and shelves | No | Yes |
+| Approve, decline or remove admins | No | Yes |
+
+Because you are the owner, you can change or undo anything an admin does (for example, republish a
+book they unpublished). To take someone's access away, go to **Team** and click **Remove access**.
+They are locked out immediately.
+
+Handing the store to its owner: the developer runs `npm run make-admin -- owner@email.com --owner`
+after the owner signs up. The previous owner becomes a regular admin.
 
 ## Orders and money
 

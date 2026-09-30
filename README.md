@@ -4,7 +4,7 @@ The customer-facing website for the online bookstore, built with **React, Vite a
 It talks to the API in `../server`.
 
 > **Status:** Step 5 of 6 - storefront, login/signup, cart, checkout, customer library, and the
-> admin area. Final polish and hand-off come next.
+> admin area with owner-approved admins. Final polish and hand-off come next.
 
 ## Requirements
 
@@ -56,16 +56,18 @@ client/
     │   ├── api.js        fetch wrapper for all API calls
     │   ├── useApi.js     hook: load data from the API
     │   ├── format.js     price formatting
+    │   ├── roles.js      isStaff / isOwner helpers
     │   └── usePageTitle.js  browser tab titles
     ├── context/
     │   ├── AuthContext.jsx   signed-in user state: useAuth()
     │   └── CartContext.jsx   shopping cart (guest + signed-in): useCart()
     ├── components/       Layout, Navbar, SearchBar, BookCard, BookGrid, BookGridSkeleton, BookCover,
     │                     CategoryChips, Pagination, AddToCartButton, ProtectedRoute, FormField,
-    │                     ErrorBoundary, admin/ (AdminLayout, FileUpload)
+    │                     ErrorBoundary, Modal, ConfirmProvider, PasswordField, AdminApplyCard,
+    │                     admin/ (AdminLayout, FileUpload)
     └── pages/            HomePage, BrowsePage, BookPage, CartPage, CheckoutCompletePage,
                           LibraryPage, LoginPage, SignupPage, AccountPage,
-                          admin/ (Dashboard, Books, BookForm, Categories, Orders)
+                          admin/ (Dashboard, Books, BookForm, Categories, Orders, Team)
 ```
 
 ## Storefront pages
@@ -79,16 +81,28 @@ client/
 | `/cart` | Cart and checkout button |
 | `/checkout/complete` | Where the payment page returns the customer (members only) |
 | `/library` | Purchased books with download buttons (members only) |
-| `/admin` | Admin dashboard (admins only). Sub-pages: `/admin/books`, `/admin/books/new`, `/admin/books/:id`, `/admin/categories`, `/admin/orders` |
+| `/admin` | Admin dashboard (admins only). Sub-pages: `/admin/books`, `/admin/books/new`, `/admin/books/:id`, `/admin/categories`, `/admin/orders`, `/admin/team` (owner only) |
 
 Shelves, chips and menus come from the database, so adding a category (for example a
 non-fiction or educational shelf) makes it appear everywhere with no code change.
 Books without a cover image get a colourful generated cover, so the shelves always look lively.
 
+## UI conventions (please keep these)
+
+- **Never use the browser's `window.confirm`, `alert` or `prompt`.** Use the designed pop-ups:
+  - Yes/no questions: `const confirm = useConfirm();` then
+    `if (!(await confirm({ title, message, confirmLabel, danger: true }))) return;`
+  - Anything with a form or custom content: `<Modal open onClose title>...</Modal>`.
+  Both handle Escape, backdrop click, keyboard focus and screen readers for you.
+- **Every password field uses `<PasswordField>`**, which adds the eye button to show or hide the password.
+- Roles: use `isStaff(user)` and `isOwner(user)` from `src/lib/roles.js`. They only decide what to
+  *show*; the server decides what is actually allowed.
+
 ## Admin area
 
 Reached at `/admin` (an "Admin" link appears in the header for admin accounts). The screens are
 Dashboard, Books (list, add, edit, upload cover and file, publish), Shelves, and Orders.
+Admins and the owner can use it; customers can't. Some things are owner-only (deleting books and shelves, and the Team screen where admin applications are approved).
 Access is checked twice: the page hides itself from non-admins, and the server refuses admin
 requests from anyone who isn't an admin. See `../docs/ADMIN-GUIDE.md` for the store owner's guide.
 

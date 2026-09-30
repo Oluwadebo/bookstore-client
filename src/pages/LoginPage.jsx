@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import FormField from "../components/FormField.jsx";
+import PasswordField from "../components/PasswordField.jsx";
 
 export default function LoginPage() {
   const { user, login } = useAuth();
@@ -41,7 +42,7 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4 rounded-3xl bg-white p-6 shadow-sm">
         <FormField label="Email" id="email" type="email" autoComplete="email" required value={form.email} onChange={update} />
-        <FormField label="Password" id="password" type="password" autoComplete="current-password" required value={form.password} onChange={update} />
+        <PasswordField label="Password" id="password" autoComplete="current-password" required value={form.password} onChange={update} />
 
         {error && (
           <p role="alert" className="rounded-xl bg-coral/15 px-4 py-3 text-sm font-semibold">

@@ -15,6 +15,9 @@ import { api } from "../../lib/api.js";
 import { formatBytes } from "../../lib/format.js";
 import { useApi } from "../../lib/useApi.js";
 import { usePageTitle } from "../../lib/usePageTitle.js";
+import { useConfirm } from "../../components/ConfirmProvider.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
+import { isOwner } from "../../lib/roles.js";
 
 const EMPTY = { title: "", authors: "", description: "", price: "", currency: "", categories: [], tags: "", language: "en", publishedYear: "", featured: false, isPublished: false };
 const splitList = (text) => text.split(",").map((item) => item.trim()).filter(Boolean);
@@ -24,6 +27,9 @@ export default function AdminBookForm() {
   const isNew = !id;
   const navigate = useNavigate();
   const location = useLocation();
+  const confirm = useConfirm();
+  const { user } = useAuth();
+  const owner = isOwner(user); // only the site owner may delete books
   usePageTitle(isNew ? "Admin: add book" : "Admin: edit book");
 
   const loaded = useApi(isNew ? null : `/api/admin/books/${id}`);
@@ -104,7 +110,13 @@ export default function AdminBookForm() {
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Delete "${book.title}" permanently? This cannot be undone.`)) return;
+    const ok = await confirm({
+      title: "Delete this book?",
+      message: <><strong>{book.title}</strong> will be removed permanently, together with its cover and file. This cannot be undone.</>,
+      confirmLabel: "Delete book",
+      danger: true,
+    });
+    if (!ok) return;
     setError("");
     try {
       await api(`/api/admin/books/${id}`, { method: "DELETE" });
@@ -213,9 +225,13 @@ export default function AdminBookForm() {
               </div>
             </div>
 
-            <button type="button" onClick={handleDelete} className="w-full rounded-full border-2 border-coral px-6 py-3 font-semibold text-coral hover:bg-coral hover:text-navy">
-              Delete this book
-            </button>
+            {owner ? (
+              <button type="button" onClick={handleDelete} className="w-full rounded-full border-2 border-red-700 px-6 py-3 font-semibold text-red-700 hover:bg-red-700 hover:text-white">
+                Delete this book
+              </button>
+            ) : (
+              <p className="rounded-2xl bg-white p-4 text-sm shadow-sm">Only the site owner can delete books. To hide this book from the store, untick <strong>Published</strong>.</p>
+            )}
           </>
         )}
       </aside>

@@ -8,6 +8,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
+import { isStaff } from "../lib/roles.js";
 import SearchBar from "./SearchBar.jsx";
 
 export default function Navbar() {
@@ -32,7 +33,7 @@ export default function Navbar() {
           <Link to="/browse" className={`${link} hidden sm:block`}>
             Browse
           </Link>
-          {user?.role === "admin" && (
+          {isStaff(user) && (
             <Link to="/admin" className={`${link} hidden sm:block`}>
               Admin
             </Link>

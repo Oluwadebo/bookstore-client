@@ -2,7 +2,8 @@
  * Wrap any page that needs a signed-in user:
  *
  *   <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
- *   <Route path="/admin"   element={<ProtectedRoute adminOnly>...</ProtectedRoute>} />
+ *   <Route path="/admin"   element={<ProtectedRoute adminOnly>...</ProtectedRoute>} />   admins + owner
+ *   <Route path="/team"    element={<ProtectedRoute ownerOnly>...</ProtectedRoute>} />   owner only
  *
  * Signed-out visitors are sent to /login and returned to the page they wanted
  * after signing in. This is a convenience for the UI only: the server enforces
@@ -10,14 +11,16 @@
  */
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { isOwner, isStaff } from "../lib/roles.js";
 
-export default function ProtectedRoute({ children, adminOnly = false }) {
+export default function ProtectedRoute({ children, adminOnly = false, ownerOnly = false }) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) return <p className="px-4 py-24 text-center">Loading...</p>;
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (adminOnly && user.role !== "admin") return <Navigate to="/" replace />;
+  if (ownerOnly && !isOwner(user)) return <Navigate to="/admin" replace />;
+  if (adminOnly && !isStaff(user)) return <Navigate to="/" replace />;
 
   return children;
 }

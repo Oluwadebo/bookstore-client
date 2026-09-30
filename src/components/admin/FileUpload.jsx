@@ -52,7 +52,7 @@ export default function FileUpload({ label, hint, accept, field, endpoint, onDon
           <p className="mt-1 text-xs font-semibold">{progress < 100 ? `Uploading... ${progress}%` : "Checking the file..."}</p>
         </div>
       )}
-      {error && <p role="alert" className="mt-2 text-sm font-semibold text-coral">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm font-semibold text-red-700">{error}</p>}
     </div>
   );
 }

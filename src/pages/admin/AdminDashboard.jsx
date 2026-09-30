@@ -23,6 +23,11 @@ export default function AdminDashboard() {
 
   return (
     <>
+      {data.pendingAdminRequests > 0 && (
+        <Link to="/admin/team" className="mb-6 block rounded-2xl bg-sunshine/50 px-5 py-4 font-semibold hover:bg-sunshine/70">
+          {data.pendingAdminRequests} {data.pendingAdminRequests === 1 ? "person has" : "people have"} applied to be an admin. Review now
+        </Link>
+      )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Books" value={data.books} note={`${data.published} published, ${data.drafts} drafts`} />
         <Stat label="Shelves" value={data.categories} />

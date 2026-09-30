@@ -7,12 +7,18 @@ import { api } from "../../lib/api.js";
 import FormField from "../../components/FormField.jsx";
 import { useApi } from "../../lib/useApi.js";
 import { usePageTitle } from "../../lib/usePageTitle.js";
+import { useConfirm } from "../../components/ConfirmProvider.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
+import { isOwner } from "../../lib/roles.js";
 
 const BLANK = { name: "", type: "fiction", description: "", color: "#ff6b5a", parent: "", sortOrder: 0 };
 const TYPE_LABELS = { fiction: "Fiction", "non-fiction": "Non-fiction", educational: "Educational" };
 
 export default function AdminCategories() {
   usePageTitle("Admin: shelves");
+  const confirm = useConfirm();
+  const { user } = useAuth();
+  const owner = isOwner(user); // only the site owner may delete shelves
   const { data, error: loadError, reload } = useApi("/api/categories");
   const [editing, setEditing] = useState(null); // the shelf being edited, or null when adding
   const [form, setForm] = useState(BLANK);
@@ -52,7 +58,13 @@ export default function AdminCategories() {
   }
 
   async function handleDelete(shelf) {
-    if (!window.confirm(`Delete the shelf "${shelf.name}"?`)) return;
+    const ok = await confirm({
+      title: "Delete this shelf?",
+      message: <>The shelf <strong>{shelf.name}</strong> will be removed. Books are not deleted, but the shelf must be empty first.</>,
+      confirmLabel: "Delete shelf",
+      danger: true,
+    });
+    if (!ok) return;
     setError("");
     try {
       await api(`/api/admin/categories/${shelf._id}`, { method: "DELETE" });
@@ -82,7 +94,7 @@ export default function AdminCategories() {
                 <p className="text-sm opacity-70">{TYPE_LABELS[shelf.type]} · {shelf.bookCount} {shelf.bookCount === 1 ? "book" : "books"}</p>
               </div>
               <button onClick={() => startEdit(shelf)} className="text-sm font-semibold underline">Edit</button>
-              <button onClick={() => handleDelete(shelf)} className="text-sm font-semibold text-coral underline">Delete</button>
+              {owner && <button onClick={() => handleDelete(shelf)} className="text-sm font-semibold text-red-700 underline">Delete</button>}
             </li>
           ))}
         </ul>

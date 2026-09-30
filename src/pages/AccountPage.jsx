@@ -2,13 +2,20 @@
  * Account page (/account) - protected. Shows the signed-in user's details
  * and their past orders, with a shortcut to the library.
  */
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import AdminApplyCard from "../components/AdminApplyCard.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { isStaff, roleLabel } from "../lib/roles.js";
 import { formatPrice } from "../lib/format.js";
 import { useApi } from "../lib/useApi.js";
 
 export default function AccountPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  // Pick up a role change (for example an approved admin application) without needing to log out.
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
   const orders = useApi("/api/orders");
 
   return (
@@ -23,10 +30,10 @@ export default function AccountPage() {
           <dt className="text-sm font-semibold opacity-70">Email</dt>
           <dd className="text-lg break-all">{user.email}</dd>
         </div>
-        {user.role === "admin" && (
+        {isStaff(user) && (
           <div>
             <dt className="text-sm font-semibold opacity-70">Role</dt>
-            <dd className="text-lg">Administrator</dd>
+            <dd className="text-lg">{roleLabel(user)}</dd>
           </div>
         )}
       </dl>
@@ -35,12 +42,14 @@ export default function AccountPage() {
         <Link to="/library" className="rounded-full bg-coral px-6 py-3 font-semibold text-navy hover:bg-coral/90">
           Go to my library
         </Link>
-        {user.role === "admin" && (
+        {isStaff(user) && (
           <Link to="/admin" className="rounded-full border-2 border-navy px-6 py-3 font-semibold hover:bg-navy hover:text-cream">
             Open admin area
           </Link>
         )}
       </div>
+
+      {!isStaff(user) && <AdminApplyCard />}
 
       <h2 className="mt-12 font-display text-2xl font-bold">Order history</h2>
       {orders.data && orders.data.orders.length === 0 && <p className="mt-3">No orders yet.</p>}
