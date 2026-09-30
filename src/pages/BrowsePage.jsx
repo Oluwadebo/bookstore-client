@@ -39,7 +39,10 @@ export default function BrowsePage() {
   usePageTitle(heading);
 
   // Jump back to the top whenever the visitor changes page.
-  useEffect(() => window.scrollTo({ top: 0 }), [page]);
+  // Braces matter: an effect must not return a value (React treats it as a cleanup function).
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [page]);
 
   /** Change one URL setting. Changing anything except the page returns to page 1. */
   function updateParam(key, value) {
