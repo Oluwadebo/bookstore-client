@@ -9,6 +9,7 @@
 import { useEffect } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import BookGrid from "../components/BookGrid.jsx";
+import BookGridSkeleton from "../components/BookGridSkeleton.jsx";
 import CategoryChips from "../components/CategoryChips.jsx";
 import Pagination from "../components/Pagination.jsx";
 import { useApi } from "../lib/useApi.js";
@@ -68,7 +69,7 @@ export default function BrowsePage() {
       {!notFound && (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm font-semibold">
-            {data ? `${data.total} ${data.total === 1 ? "book" : "books"}` : "\u00A0"}
+            {books.loading ? "Loading..." : data ? `${data.total} ${data.total === 1 ? "book" : "books"}` : "\u00A0"}
           </p>
           <label className="flex items-center gap-2 text-sm font-semibold">
             Sort by
@@ -87,13 +88,15 @@ export default function BrowsePage() {
         </div>
       )}
 
-      <div className={`mt-6 transition-opacity ${books.loading && data ? "opacity-50" : ""}`}>
-        {books.error && !notFound && <p role="alert">Something went wrong: {books.error}</p>}
-        {books.loading && !data && <p>Loading books...</p>}
+      <div className="mt-6">
+        {/* While loading, show placeholders instead of the previous results, so old books never appear under a new heading. */}
+        {books.loading && <BookGridSkeleton />}
 
-        {data && data.books.length > 0 && <BookGrid books={data.books} />}
+        {!books.loading && books.error && !notFound && <p role="alert">Something went wrong: {books.error}</p>}
 
-        {data && data.books.length === 0 && (
+        {!books.loading && data && data.books.length > 0 && <BookGrid books={data.books} />}
+
+        {!books.loading && data && data.books.length === 0 && (
           <div className="rounded-3xl bg-white p-8 text-center">
             <p className="font-display text-xl font-bold">No books found</p>
             <p className="mt-2">Try a different word, or browse a shelf above.</p>
@@ -103,14 +106,14 @@ export default function BrowsePage() {
           </div>
         )}
 
-        {notFound && (
+        {!books.loading && notFound && (
           <Link to="/browse" className="font-semibold underline">
             Browse all books instead
           </Link>
         )}
       </div>
 
-      {data && <Pagination page={data.page} totalPages={data.totalPages} onChange={(next) => updateParam("page", String(next))} />}
+      {data && !books.loading && <Pagination page={data.page} totalPages={data.totalPages} onChange={(next) => updateParam("page", String(next))} />}
     </main>
   );
 }
