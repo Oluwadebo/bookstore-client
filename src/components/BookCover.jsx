@@ -7,6 +7,8 @@
  * Full class names are written out below (not built from pieces) because
  * Tailwind only generates classes it can find as complete strings.
  */
+import { apiUrl } from "../lib/api.js";
+
 const COVER_STYLES = [
   "bg-coral text-navy",
   "bg-sunshine text-navy",
@@ -26,7 +28,9 @@ export default function BookCover({ book }) {
   const shape = "aspect-[2/3] w-full rounded-xl shadow-md";
 
   if (book.coverUrl) {
-    return <img src={book.coverUrl} alt={`Cover of ${book.title}`} loading="lazy" className={`${shape} object-cover`} />;
+    // Covers uploaded through the admin area live on the API server ("/api/covers/...").
+    const src = book.coverUrl.startsWith("/api/") ? apiUrl(book.coverUrl) : book.coverUrl;
+    return <img src={src} alt={`Cover of ${book.title}`} loading="lazy" className={`${shape} object-cover`} />;
   }
 
   const style = COVER_STYLES[hash(book.title) % COVER_STYLES.length];

@@ -31,9 +31,16 @@ export default function AccountPage() {
         )}
       </dl>
 
-      <Link to="/library" className="mt-6 inline-block rounded-full bg-coral px-6 py-3 font-semibold text-navy hover:bg-coral/90">
-        Go to my library
-      </Link>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link to="/library" className="rounded-full bg-coral px-6 py-3 font-semibold text-navy hover:bg-coral/90">
+          Go to my library
+        </Link>
+        {user.role === "admin" && (
+          <Link to="/admin" className="rounded-full border-2 border-navy px-6 py-3 font-semibold hover:bg-navy hover:text-cream">
+            Open admin area
+          </Link>
+        )}
+      </div>
 
       <h2 className="mt-12 font-display text-2xl font-bold">Order history</h2>
       {orders.data && orders.data.orders.length === 0 && <p className="mt-3">No orders yet.</p>}

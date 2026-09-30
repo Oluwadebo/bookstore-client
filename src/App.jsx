@@ -2,7 +2,7 @@
  * Top-level route table. Each URL maps to one page component.
  * Pages inside <Layout> share the header and footer.
  * New pages are added here as they are built:
- *   /admin (step 5)...
+ *   more admin screens go inside the /admin route below
  */
 import { Routes, Route, Link } from "react-router-dom";
 import Layout from "./components/Layout.jsx";
@@ -16,6 +16,12 @@ import AccountPage from "./pages/AccountPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import CheckoutCompletePage from "./pages/CheckoutCompletePage.jsx";
 import LibraryPage from "./pages/LibraryPage.jsx";
+import AdminLayout from "./components/admin/AdminLayout.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminBooks from "./pages/admin/AdminBooks.jsx";
+import AdminBookForm from "./pages/admin/AdminBookForm.jsx";
+import AdminCategories from "./pages/admin/AdminCategories.jsx";
+import AdminOrders from "./pages/admin/AdminOrders.jsx";
 
 function NotFound() {
   return (
@@ -64,6 +70,22 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        {/* Admin area: only administrators get past ProtectedRoute (the server enforces it too). */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="books" element={<AdminBooks />} />
+          <Route path="books/new" element={<AdminBookForm />} />
+          <Route path="books/:id" element={<AdminBookForm />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="orders" element={<AdminOrders />} />
+        </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

@@ -32,3 +32,35 @@ export async function api(path, { method = "GET", body } = {}) {
   }
   return data;
 }
+
+/**
+ * Upload a file (multipart form) with progress reporting.
+ *   await upload("/api/admin/books/123/cover", formData, (percent) => ...)
+ * fetch() cannot report upload progress, so this uses XMLHttpRequest. Big book files
+ * on slow connections are the reason: the admin sees the percentage move.
+ */
+export function upload(path, formData, onProgress) {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("POST", `${BASE_URL}${path}`);
+    request.withCredentials = true; // send the login cookie
+
+    if (onProgress) {
+      request.upload.onprogress = (event) => {
+        if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+      };
+    }
+    request.onload = () => {
+      let data = null;
+      try {
+        data = JSON.parse(request.responseText);
+      } catch {
+        /* non-JSON response */
+      }
+      if (request.status >= 200 && request.status < 300) resolve(data);
+      else reject(new Error(data?.error || `Upload failed (${request.status})`));
+    };
+    request.onerror = () => reject(new Error("Network error. Check your connection and try again."));
+    request.send(formData);
+  });
+}

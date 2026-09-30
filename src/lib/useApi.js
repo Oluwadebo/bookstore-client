@@ -7,12 +7,14 @@
  * - While a new request is loading, the previous `data` is kept, so lists
  *   don't flash empty when the visitor changes a filter or page.
  * - Results from outdated requests are ignored (no flicker if the visitor clicks fast).
+ * - `reload()` fetches the same path again (for example after saving a change).
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api } from "./api.js";
 
 export function useApi(path) {
   const [state, setState] = useState({ data: null, error: "", loading: Boolean(path) });
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     if (!path) return;
@@ -26,7 +28,8 @@ export function useApi(path) {
     return () => {
       cancelled = true;
     };
-  }, [path]);
+  }, [path, version]);
 
-  return state;
+  const reload = useCallback(() => setVersion((current) => current + 1), []);
+  return { ...state, reload };
 }

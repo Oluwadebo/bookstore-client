@@ -32,6 +32,11 @@ export default function Navbar() {
           <Link to="/browse" className={`${link} hidden sm:block`}>
             Browse
           </Link>
+          {user?.role === "admin" && (
+            <Link to="/admin" className={`${link} hidden sm:block`}>
+              Admin
+            </Link>
+          )}
           {user && (
             <Link to="/library" className={`${link} hidden sm:block`}>
               My library
