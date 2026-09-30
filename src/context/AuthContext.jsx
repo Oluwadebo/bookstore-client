@@ -2,7 +2,7 @@
  * Auth state for the whole app.
  *
  * Wrap the app in <AuthProvider> once (see main.jsx). Any component can then call:
- *   const { user, loading, login, signup, logout } = useAuth();
+ *   const { user, loading, login, signup, logout, refreshUser } = useAuth();
  *
  * - `user` is the signed-in user object, or null when signed out.
  * - `loading` is true only while the app checks for an existing session on
@@ -49,9 +49,19 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  /** Reload the user from the server, e.g. after a purchase adds books to their library. */
+  const refreshUser = useCallback(async () => {
+    try {
+      const data = await api("/api/auth/me");
+      setUser(data.user);
+    } catch {
+      /* keep the current user; a failed refresh should not sign anyone out */
+    }
+  }, []);
+
   const value = useMemo(
-    () => ({ user, loading, signup, login, logout }),
-    [user, loading, signup, login, logout]
+    () => ({ user, loading, signup, login, logout, refreshUser }),
+    [user, loading, signup, login, logout, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

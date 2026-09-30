@@ -11,6 +11,11 @@
  */
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 
+/** Full URL for an API path. Used for file downloads, which are normal browser navigations. */
+export function apiUrl(path) {
+  return `${BASE_URL}${path}`;
+}
+
 export async function api(path, { method = "GET", body } = {}) {
   const response = await fetch(`${BASE_URL}${path}`, {
     method,

@@ -4,18 +4,20 @@
  * truth; the HTML attributes here (required, minLength) just give instant feedback.
  */
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import FormField from "../components/FormField.jsx";
 
 export default function SignupPage() {
   const { user, signup } = useAuth();
+  const location = useLocation();
+  const redirectTo = location.state?.from?.pathname || "/";
 
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to={redirectTo} replace />;
 
   const update = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 

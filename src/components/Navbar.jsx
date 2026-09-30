@@ -1,16 +1,18 @@
 /**
- * Site header. Logo, search, and account links (Log in / Sign up for visitors,
- * name + Log out for customers). The cart icon is added in step 4.
+ * Site header. Logo, search, cart with item count, and account links
+ * (Log in / Sign up for visitors, name + Log out for customers).
  *
  * Layout: on phones the search box drops to its own full-width row
  * (`order-last w-full`); from `sm` upwards it sits between the logo and the links.
  */
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useCart } from "../context/CartContext.jsx";
 import SearchBar from "./SearchBar.jsx";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { count } = useCart();
   const firstName = user?.name?.split(" ")[0];
   const link = "rounded-full px-3 py-2 hover:bg-navy/5";
 
@@ -29,6 +31,15 @@ export default function Navbar() {
         <div className="ml-auto flex items-center gap-1 text-sm font-semibold sm:ml-0">
           <Link to="/browse" className={`${link} hidden sm:block`}>
             Browse
+          </Link>
+          {user && (
+            <Link to="/library" className={`${link} hidden sm:block`}>
+              My library
+            </Link>
+          )}
+          <Link to="/cart" className={link} aria-label={`Cart, ${count} ${count === 1 ? "item" : "items"}`}>
+            Cart
+            {count > 0 && <span className="ml-1 rounded-full bg-coral px-2 py-0.5 text-xs text-navy">{count}</span>}
           </Link>
           {user ? (
             <>

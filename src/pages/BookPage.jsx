@@ -1,8 +1,9 @@
 /**
  * Book detail page (/books/:slug): cover, description, price, details,
- * and related titles. The "Add to cart" button is added here in step 4.
+ * and related titles, with the Add to cart button.
  */
 import { Link, useParams } from "react-router-dom";
+import AddToCartButton from "../components/AddToCartButton.jsx";
 import BookCover from "../components/BookCover.jsx";
 import BookGrid from "../components/BookGrid.jsx";
 import { formatPrice } from "../lib/format.js";
@@ -62,7 +63,9 @@ export default function BookPage() {
           <p className="mt-2 text-lg">by {book.authors.join(", ")}</p>
 
           <p className="mt-6 text-3xl font-bold">{formatPrice(book.priceCents, book.currency)}</p>
-          {/* Step 4: the "Add to cart" button goes here. */}
+          <div className="mt-4">
+            <AddToCartButton book={book} />
+          </div>
 
           <h2 className="mt-8 font-display text-xl font-bold">About this book</h2>
           <p className="mt-2 max-w-2xl whitespace-pre-line leading-relaxed">{book.description || "No description yet."}</p>

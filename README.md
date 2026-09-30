@@ -3,8 +3,8 @@
 The customer-facing website for the online bookstore, built with **React, Vite and Tailwind CSS**.
 It talks to the API in `../server`.
 
-> **Status:** Step 3 of 6 - scaffold, brand colours, login/signup/account, and the storefront
-> (home, shelves, search, book pages). Cart and checkout arrive in the following steps.
+> **Status:** Step 4 of 6 - storefront, login/signup, cart, checkout, and the customer library.
+> The admin area comes next.
 
 ## Requirements
 
@@ -57,10 +57,14 @@ client/
     │   ├── useApi.js     hook: load data from the API
     │   ├── format.js     price formatting
     │   └── usePageTitle.js  browser tab titles
-    ├── context/AuthContext.jsx   signed-in user state: useAuth()
-    ├── components/       Layout, Navbar, SearchBar, BookCard, BookGrid, BookCover,
-    │                     CategoryChips, Pagination, ProtectedRoute, FormField
-    └── pages/            HomePage, BrowsePage, BookPage, LoginPage, SignupPage, AccountPage
+    ├── context/
+    │   ├── AuthContext.jsx   signed-in user state: useAuth()
+    │   └── CartContext.jsx   shopping cart (guest + signed-in): useCart()
+    ├── components/       Layout, Navbar, SearchBar, BookCard, BookGrid, BookGridSkeleton, BookCover,
+    │                     CategoryChips, Pagination, AddToCartButton, ProtectedRoute, FormField,
+    │                     ErrorBoundary
+    └── pages/            HomePage, BrowsePage, BookPage, CartPage, CheckoutCompletePage,
+                          LibraryPage, LoginPage, SignupPage, AccountPage
 ```
 
 ## Storefront pages
@@ -70,11 +74,28 @@ client/
 | `/` | Hero with search, shelves, featured books, new arrivals |
 | `/browse` | All books. `?search=`, `?sort=` and `?page=` are read from the address |
 | `/category/:slug` | One shelf (same page as `/browse`, filtered) |
-| `/books/:slug` | Book details and related titles |
+| `/books/:slug` | Book details, Add to cart, related titles |
+| `/cart` | Cart and checkout button |
+| `/checkout/complete` | Where the payment page returns the customer (members only) |
+| `/library` | Purchased books with download buttons (members only) |
 
 Shelves, chips and menus come from the database, so adding a category (for example a
 non-fiction or educational shelf) makes it appear everywhere with no code change.
 Books without a cover image get a colourful generated cover, so the shelves always look lively.
+
+## Cart and checkout
+
+`src/context/CartContext.jsx` provides `useCart()`. Visitors who are not signed in keep their cart in
+the browser, so they can shop first. When they log in, that cart is merged into their account cart,
+which then follows them to any device.
+
+At checkout the server rebuilds the order from its own prices, so the numbers shown in the browser
+are for display only. The customer pays on the payment provider's page and returns to
+`/checkout/complete`, which confirms the payment with the server (re-checking for up to about
+12 seconds for slow bank confirmations) before showing the books.
+
+Downloads: the Download button asks the server for a link that works for 5 minutes, then the
+browser saves the file.
 
 ## Authentication
 
