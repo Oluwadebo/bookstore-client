@@ -19,7 +19,8 @@ export default function AdminCategories() {
   const confirm = useConfirm();
   const { user } = useAuth();
   const owner = isOwner(user); // only the site owner may delete shelves
-  const { data, error: loadError, reload } = useApi("/api/categories");
+  // The owner gets every shelf; an admin gets only the shelves they created.
+  const { data, error: loadError, reload } = useApi("/api/admin/categories");
   const [editing, setEditing] = useState(null); // the shelf being edited, or null when adding
   const [form, setForm] = useState(BLANK);
   const [error, setError] = useState("");
@@ -80,8 +81,12 @@ export default function AdminCategories() {
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
       <section>
-        <h2 className="font-display text-2xl font-bold">Shelves</h2>
+        <h2 className="font-display text-2xl font-bold">{owner ? "Shelves" : "My shelves"}</h2>
+        {!owner && <p className="mt-1 text-sm opacity-80">You manage the shelves you created. When adding a book you can still put it on any shelf in the store.</p>}
         {loadError && <p role="alert" className="mt-4">Could not load shelves: {loadError}</p>}
+        {data && shelves.length === 0 && (
+          <p className="mt-4 rounded-2xl bg-white p-6 text-center">{owner ? "No shelves yet." : "You haven't created any shelves yet. Use the form to add one."}</p>
+        )}
         <ul className="mt-4 space-y-3">
           {shelves.map((shelf) => (
             <li key={shelf._id} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">

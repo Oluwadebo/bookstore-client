@@ -6,7 +6,7 @@ import { Link, useParams } from "react-router-dom";
 import AddToCartButton from "../components/AddToCartButton.jsx";
 import BookCover from "../components/BookCover.jsx";
 import BookGrid from "../components/BookGrid.jsx";
-import { formatPrice } from "../lib/format.js";
+import { formatPrice, summarise } from "../lib/format.js";
 import { useApi } from "../lib/useApi.js";
 import { usePageTitle } from "../lib/usePageTitle.js";
 
@@ -15,7 +15,7 @@ export default function BookPage() {
   const { data, error, loading } = useApi(`/api/books/${slug}`);
   const book = data?.book;
 
-  usePageTitle(book?.title || "Book");
+  usePageTitle(book?.title || "Book", book ? summarise(`${book.title} by ${book.authors.join(", ")}. ${book.description}`) : undefined);
 
   if (loading && !data) return <p className="px-4 py-24 text-center">Loading...</p>;
 

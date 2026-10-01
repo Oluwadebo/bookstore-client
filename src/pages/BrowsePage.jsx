@@ -12,6 +12,7 @@ import BookGrid from "../components/BookGrid.jsx";
 import BookGridSkeleton from "../components/BookGridSkeleton.jsx";
 import CategoryChips from "../components/CategoryChips.jsx";
 import Pagination from "../components/Pagination.jsx";
+import { summarise } from "../lib/format.js";
 import { useApi } from "../lib/useApi.js";
 import { usePageTitle } from "../lib/usePageTitle.js";
 
@@ -37,7 +38,7 @@ export default function BrowsePage() {
 
   const shelf = shelves.data?.categories.find((c) => c.slug === category);
   const heading = search ? `Results for "${search}"` : shelf ? shelf.name : "All books";
-  usePageTitle(heading);
+  usePageTitle(heading, shelf?.description && !search ? summarise(`${shelf.name}: ${shelf.description} Browse and download digital books instantly.`) : undefined);
 
   // Jump back to the top whenever the visitor changes page.
   // Braces matter: an effect must not return a value (React treats it as a cleanup function).

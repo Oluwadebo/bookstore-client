@@ -25,3 +25,14 @@ export function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
+
+/**
+ * Shortens text to about `max` characters at a word boundary, for meta descriptions
+ * (search engines show roughly the first 150-160 characters).
+ */
+export function summarise(text, max = 155) {
+  const clean = (text || "").replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max - 1);
+  return `${cut.slice(0, cut.lastIndexOf(" ") > 80 ? cut.lastIndexOf(" ") : cut.length).replace(/[.,;:!-]+$/, "")}…`;
+}

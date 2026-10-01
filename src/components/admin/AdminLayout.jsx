@@ -1,6 +1,7 @@
 /**
  * Frame for every admin screen: a title, a tab bar, and the current screen below it.
- * The Team tab exists for the site owner only, with a badge counting applications waiting.
+ * Admins see "My books" / "My shelves" (only their own work). Orders and Team are for the site owner
+ * only; Team carries a badge counting applications waiting.
  * The tabs scroll sideways on narrow phones instead of wrapping.
  */
 import { NavLink, Outlet } from "react-router-dom";
@@ -17,10 +18,9 @@ export default function AdminLayout() {
 
   const tabs = [
     { to: "/admin", label: "Dashboard", end: true },
-    { to: "/admin/books", label: "Books" },
-    { to: "/admin/categories", label: "Shelves" },
-    { to: "/admin/orders", label: "Orders" },
-    ...(owner ? [{ to: "/admin/team", label: "Team", badge: waiting }] : []),
+    { to: "/admin/books", label: owner ? "Books" : "My books" },
+    { to: "/admin/categories", label: owner ? "Shelves" : "My shelves" },
+    ...(owner ? [{ to: "/admin/orders", label: "Orders" }, { to: "/admin/team", label: "Team", badge: waiting }] : []),
   ];
 
   return (

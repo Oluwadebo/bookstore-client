@@ -85,7 +85,15 @@ export default function App() {
           <Route path="books/new" element={<AdminBookForm />} />
           <Route path="books/:id" element={<AdminBookForm />} />
           <Route path="categories" element={<AdminCategories />} />
-          <Route path="orders" element={<AdminOrders />} />
+          {/* Sales and customer details are the owner's business. */}
+          <Route
+            path="orders"
+            element={
+              <ProtectedRoute ownerOnly>
+                <AdminOrders />
+              </ProtectedRoute>
+            }
+          />
           {/* The site owner decides who else may be an admin. */}
           <Route
             path="team"

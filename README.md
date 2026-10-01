@@ -81,11 +81,20 @@ client/
 | `/cart` | Cart and checkout button |
 | `/checkout/complete` | Where the payment page returns the customer (members only) |
 | `/library` | Purchased books with download buttons (members only) |
-| `/admin` | Admin dashboard (admins only). Sub-pages: `/admin/books`, `/admin/books/new`, `/admin/books/:id`, `/admin/categories`, `/admin/orders`, `/admin/team` (owner only) |
+| `/admin` | Admin dashboard (admins only). Sub-pages: `/admin/books`, `/admin/books/new`, `/admin/books/:id`, `/admin/categories`, and `/admin/orders` and `/admin/team` (both owner only) |
 
 Shelves, chips and menus come from the database, so adding a category (for example a
 non-fiction or educational shelf) makes it appear everywhere with no code change.
 Books without a cover image get a colourful generated cover, so the shelves always look lively.
+
+## Search engines and link previews
+
+`index.html` holds the default title, meta description (about 150 characters, the length search
+engines show before cutting off) and Open Graph tags for link previews. Book and shelf pages set their
+own description with `usePageTitle(title, description)`. Because the site is a single-page app, link
+previews on WhatsApp and Facebook read only `index.html`, so every shared link shows the home-page text
+and image. Per-page previews would need server-side rendering or pre-rendering. An `og:image`
+(the logo) is added with the branding in step 6.
 
 ## UI conventions (please keep these)
 
@@ -102,7 +111,7 @@ Books without a cover image get a colourful generated cover, so the shelves alwa
 
 Reached at `/admin` (an "Admin" link appears in the header for admin accounts). The screens are
 Dashboard, Books (list, add, edit, upload cover and file, publish), Shelves, and Orders.
-Admins and the owner can use it; customers can't. Some things are owner-only (deleting books and shelves, and the Team screen where admin applications are approved).
+Admins and the owner can use it; customers can't. A regular admin only sees the books and shelves they created. The owner sees everything, and alone has Orders, Team, and deleting books and shelves.
 Access is checked twice: the page hides itself from non-admins, and the server refuses admin
 requests from anyone who isn't an admin. See `../docs/ADMIN-GUIDE.md` for the store owner's guide.
 

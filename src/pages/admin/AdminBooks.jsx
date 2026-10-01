@@ -3,7 +3,9 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import BookCover from "../../components/BookCover.jsx";
 import Pagination from "../../components/Pagination.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 import { formatPrice } from "../../lib/format.js";
+import { isOwner } from "../../lib/roles.js";
 import { useApi } from "../../lib/useApi.js";
 import { usePageTitle } from "../../lib/usePageTitle.js";
 
@@ -11,6 +13,8 @@ const badge = "rounded-full px-2.5 py-0.5 text-xs font-semibold";
 
 export default function AdminBooks() {
   usePageTitle("Admin: books");
+  const { user } = useAuth();
+  const owner = isOwner(user);
   const [searchBox, setSearchBox] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -29,6 +33,7 @@ export default function AdminBooks() {
 
   return (
     <>
+      {!owner && <p className="mb-4 text-sm opacity-80">You see the books you added. The site owner can see every book.</p>}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <form onSubmit={handleSearch} className="flex flex-1 gap-2 sm:max-w-md">
           <input
@@ -61,7 +66,11 @@ export default function AdminBooks() {
 
       {error && <p role="alert" className="mt-6">Could not load books: {error}</p>}
       {loading && !data && <p className="mt-6">Loading...</p>}
-      {data && data.books.length === 0 && <p className="mt-6 rounded-2xl bg-white p-6 text-center">No books found.</p>}
+      {data && data.books.length === 0 && (
+        <p className="mt-6 rounded-2xl bg-white p-6 text-center">
+          {!owner && !search && !status ? "You haven't added any books yet. Click Add book to start." : "No books found."}
+        </p>
+      )}
 
       <ul className={`mt-6 space-y-3 ${loading && data ? "opacity-60" : ""}`}>
         {data?.books.map((book) => (

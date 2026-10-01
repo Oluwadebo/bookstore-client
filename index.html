@@ -4,10 +4,24 @@
     <meta charset="UTF-8" />
     <!-- viewport-fit=cover + width=device-width make layouts work on phones and tablets -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="description" content="Discover your next favourite read. Digital books, delivered instantly." />
+
+    <title>Bookstore | Digital books, delivered instantly</title>
+
+    <!-- Shown by search engines under the page title. About 150 characters is the sweet spot:
+         longer gets cut off, much shorter wastes the space. Each book and shelf page sets its own
+         (see src/lib/usePageTitle.js); this one is the default for the home page. -->
+    <meta name="description" content="Discover your next favourite read. Browse colourful fiction shelves, search by title or author, and download your digital books the moment you check out." />
+
+    <!-- Link previews when the site is shared on WhatsApp, Facebook, X and similar. These are read
+         from this file directly, so they show the home-page text for every shared link. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Bookstore" />
+    <meta property="og:title" content="Bookstore | Digital books, delivered instantly" />
+    <meta property="og:description" content="Browse colourful fiction shelves, search by title or author, and download your digital books the moment you check out." />
+    <meta name="twitter:card" content="summary" />
+
     <meta name="theme-color" content="#FF6B5A" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Bookstore</title>
   </head>
   <body>
     <div id="root"></div>
