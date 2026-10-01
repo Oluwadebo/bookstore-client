@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useConfirm } from "../../components/ConfirmProvider.jsx";
+import { Skeleton, SkeletonShelves } from "../../components/Loading.jsx";
 import { api } from "../../lib/api.js";
 import { useApi } from "../../lib/useApi.js";
 import { usePageTitle } from "../../lib/usePageTitle.js";
@@ -73,7 +74,14 @@ export default function AdminTeam() {
     });
 
   if (loadError) return <p role="alert">Could not load the team: {loadError}</p>;
-  if (!data) return <p>Loading...</p>;
+  if (!data) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <SkeletonShelves count={3} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">

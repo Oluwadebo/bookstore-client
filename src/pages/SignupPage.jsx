@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import FormField from "../components/FormField.jsx";
+import { BusyLabel } from "../components/Loading.jsx";
 import PasswordField from "../components/PasswordField.jsx";
 
 export default function SignupPage() {
@@ -51,7 +52,7 @@ export default function SignupPage() {
         )}
 
         <button type="submit" disabled={submitting} className="w-full rounded-full bg-coral px-6 py-3 font-semibold text-navy hover:bg-coral/90 disabled:opacity-60">
-          {submitting ? "Creating account..." : "Sign up"}
+          <BusyLabel busy={submitting} busyText="Creating account...">Sign up</BusyLabel>
         </button>
       </form>
 

@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import BookCover from "../components/BookCover.jsx";
 import BookGridSkeleton from "../components/BookGridSkeleton.jsx";
+import { BusyLabel } from "../components/Loading.jsx";
 import { api, apiUrl } from "../lib/api.js";
 import { useApi } from "../lib/useApi.js";
 import { usePageTitle } from "../lib/usePageTitle.js";
@@ -69,7 +70,7 @@ export default function LibraryPage() {
                   disabled={busyId === book._id}
                   className="mt-3 w-full rounded-full bg-navy px-4 py-2 text-sm font-semibold text-cream hover:bg-navy/90 disabled:opacity-60"
                 >
-                  {busyId === book._id ? "Preparing..." : `Download ${book.format.toUpperCase()}`}
+                  <BusyLabel busy={busyId === book._id} busyText="Preparing...">{`Download ${book.format.toUpperCase()}`}</BusyLabel>
                 </button>
               </div>
             ))}

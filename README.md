@@ -64,7 +64,7 @@ client/
     ├── components/       Layout, Navbar, SearchBar, BookCard, BookGrid, BookGridSkeleton, BookCover,
     │                     CategoryChips, Pagination, AddToCartButton, ProtectedRoute, FormField,
     │                     ErrorBoundary, Modal, ConfirmProvider, PasswordField, AdminApplyCard,
-    │                     admin/ (AdminLayout, FileUpload)
+    │                     Loading (all loading states), admin/ (AdminLayout, FileUpload, FileDetailsModal)
     └── pages/            HomePage, BrowsePage, BookPage, CartPage, CheckoutCompletePage,
                           LibraryPage, LoginPage, SignupPage, AccountPage,
                           admin/ (Dashboard, Books, BookForm, Categories, Orders, Team)
@@ -103,6 +103,10 @@ and image. Per-page previews would need server-side rendering or pre-rendering. 
     `if (!(await confirm({ title, message, confirmLabel, danger: true }))) return;`
   - Anything with a form or custom content: `<Modal open onClose title>...</Modal>`.
   Both handle Escape, backdrop click, keyboard focus and screen readers for you.
+- **Never write a plain "Loading..." line.** Use the components in `src/components/Loading.jsx`:
+  `PageLoader` (whole page), `Skeleton*` placeholders shaped like each screen, `BusyLabel` (spinner inside a
+  button), and the slim `TopLoadingBar` that already appears whenever the app waits on the server.
+  Make a skeleton look like the real content so nothing jumps when the data arrives.
 - **Every password field uses `<PasswordField>`**, which adds the eye button to show or hide the password.
 - Roles: use `isStaff(user)` and `isOwner(user)` from `src/lib/roles.js`. They only decide what to
   *show*; the server decides what is actually allowed.

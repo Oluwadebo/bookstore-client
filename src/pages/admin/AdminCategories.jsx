@@ -1,34 +1,44 @@
 /**
- * Shelf manager (/admin/categories): add, edit and remove shelves.
- * To open the store to non-fiction or educational books, add a shelf with that type here.
+ * Shelf manager (/admin/categories).
+ *
+ * EVERY admin sees EVERY shelf here, so they can tell a name like "Fantasy" is already taken
+ * before creating it. Shelves they didn't create are view-only; the owner can edit them all.
+ * To open the store to non-fiction or educational books, add a shelf with that type.
  */
 import { useState } from "react";
 import { api } from "../../lib/api.js";
-import FormField from "../../components/FormField.jsx";
-import { useApi } from "../../lib/useApi.js";
-import { usePageTitle } from "../../lib/usePageTitle.js";
 import { useConfirm } from "../../components/ConfirmProvider.jsx";
+import FormField from "../../components/FormField.jsx";
+import { BusyLabel, SkeletonShelves } from "../../components/Loading.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { isOwner } from "../../lib/roles.js";
+import { useApi } from "../../lib/useApi.js";
+import { usePageTitle } from "../../lib/usePageTitle.js";
 
 const BLANK = { name: "", type: "fiction", description: "", color: "#ff6b5a", parent: "", sortOrder: 0 };
 const TYPE_LABELS = { fiction: "Fiction", "non-fiction": "Non-fiction", educational: "Educational" };
+
+/** "Sci-Fi", "sci fi" and "SciFi" all count as the same name (the server treats them alike too). */
+const nameKey = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
 export default function AdminCategories() {
   usePageTitle("Admin: shelves");
   const confirm = useConfirm();
   const { user } = useAuth();
-  const owner = isOwner(user); // only the site owner may delete shelves
-  // The owner gets every shelf; an admin gets only the shelves they created.
-  const { data, error: loadError, reload } = useApi("/api/admin/categories");
+  const owner = isOwner(user);
+  const { data, error: loadError, loading, reload } = useApi("/api/admin/categories");
   const [editing, setEditing] = useState(null); // the shelf being edited, or null when adding
   const [form, setForm] = useState(BLANK);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   const shelves = data?.categories ?? [];
-  const topLevel = shelves.filter((shelf) => !shelf.parent && shelf._id !== editing?._id);
+  // Only shelves you can edit may hold your new sub-shelf.
+  const parents = shelves.filter((shelf) => !shelf.parent && shelf.canEdit && shelf._id !== editing?._id);
   const update = (event) => setForm({ ...form, [event.target.name]: event.target.value });
+
+  // Live check: is the name being typed already used by another shelf?
+  const taken = form.name.trim() ? shelves.find((shelf) => shelf._id !== editing?._id && nameKey(shelf.name) === nameKey(form.name)) : null;
 
   function startEdit(shelf) {
     setEditing(shelf);
@@ -43,6 +53,7 @@ export default function AdminCategories() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (taken) return;
     setError("");
     setSaving(true);
     try {
@@ -81,15 +92,23 @@ export default function AdminCategories() {
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
       <section>
-        <h2 className="font-display text-2xl font-bold">{owner ? "Shelves" : "My shelves"}</h2>
-        {!owner && <p className="mt-1 text-sm opacity-80">You manage the shelves you created. When adding a book you can still put it on any shelf in the store.</p>}
-        {loadError && <p role="alert" className="mt-4">Could not load shelves: {loadError}</p>}
-        {data && shelves.length === 0 && (
-          <p className="mt-4 rounded-2xl bg-white p-6 text-center">{owner ? "No shelves yet." : "You haven't created any shelves yet. Use the form to add one."}</p>
+        <h2 className="font-display text-2xl font-bold">All shelves</h2>
+        {!owner && (
+          <p className="mt-1 text-sm opacity-80">
+            Every shelf in the store is listed so you can see what already exists. You can edit the ones you created. When adding a book, you can put it on any shelf.
+          </p>
         )}
-        <ul className="mt-4 space-y-3">
+        {loadError && <p role="alert" className="mt-4">Could not load shelves: {loadError}</p>}
+        {loading && !data && (
+          <div className="mt-4">
+            <SkeletonShelves />
+          </div>
+        )}
+        {data && shelves.length === 0 && <p className="mt-4 rounded-2xl bg-white p-6 text-center">No shelves yet. Use the form to add the first one.</p>}
+
+        <ul className={`mt-4 space-y-3 ${loading && data ? "opacity-60" : ""}`}>
           {shelves.map((shelf) => (
-            <li key={shelf._id} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+            <li key={shelf._id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
               <span className="h-4 w-4 shrink-0 rounded-full" style={{ backgroundColor: shelf.color }} />
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">
@@ -98,8 +117,15 @@ export default function AdminCategories() {
                 </p>
                 <p className="text-sm opacity-70">{TYPE_LABELS[shelf.type]} · {shelf.bookCount} {shelf.bookCount === 1 ? "book" : "books"}</p>
               </div>
-              <button onClick={() => startEdit(shelf)} className="text-sm font-semibold underline">Edit</button>
-              {owner && <button onClick={() => handleDelete(shelf)} className="text-sm font-semibold text-red-700 underline">Delete</button>}
+              {shelf.canEdit ? (
+                <>
+                  {!owner && <span className="rounded-full bg-teal/30 px-2.5 py-0.5 text-xs font-semibold">Yours</span>}
+                  <button onClick={() => startEdit(shelf)} className="text-sm font-semibold underline">Edit</button>
+                  {owner && <button onClick={() => handleDelete(shelf)} className="text-sm font-semibold text-red-700 underline">Delete</button>}
+                </>
+              ) : (
+                <span className="rounded-full bg-navy/10 px-2.5 py-0.5 text-xs font-semibold">View only</span>
+              )}
             </li>
           ))}
         </ul>
@@ -107,7 +133,15 @@ export default function AdminCategories() {
 
       <form onSubmit={handleSubmit} className="h-fit space-y-4 rounded-3xl bg-white p-6 shadow-sm">
         <h2 className="font-display text-xl font-bold">{editing ? `Edit "${editing.name}"` : "Add a shelf"}</h2>
-        <FormField label="Name" id="name" value={form.name} onChange={update} required maxLength={80} />
+
+        <div>
+          <FormField label="Name" id="name" value={form.name} onChange={update} required maxLength={80} aria-describedby="name-hint" />
+          {taken && (
+            <p id="name-hint" role="status" className="mt-2 rounded-xl bg-sunshine/40 px-4 py-3 text-sm font-semibold">
+              A shelf called "{taken.name}" already exists. Put your book on that shelf instead of creating another one.
+            </p>
+          )}
+        </div>
 
         <div>
           <label htmlFor="type" className="mb-1 block text-sm font-semibold">Type</label>
@@ -133,15 +167,15 @@ export default function AdminCategories() {
           <label htmlFor="parent" className="mb-1 block text-sm font-semibold">Inside shelf (optional)</label>
           <select id="parent" name="parent" value={form.parent} onChange={update} className={field}>
             <option value="">None: a main shelf</option>
-            {topLevel.map((shelf) => <option key={shelf._id} value={shelf._id}>{shelf.name}</option>)}
+            {parents.map((shelf) => <option key={shelf._id} value={shelf._id}>{shelf.name}</option>)}
           </select>
         </div>
 
         {error && <p role="alert" className="rounded-xl bg-coral/15 px-4 py-3 text-sm font-semibold">{error}</p>}
 
         <div className="flex gap-3">
-          <button disabled={saving} className="rounded-full bg-coral px-6 py-3 font-semibold text-navy hover:bg-coral/90 disabled:opacity-60">
-            {saving ? "Saving..." : editing ? "Save shelf" : "Add shelf"}
+          <button disabled={saving || Boolean(taken)} className="rounded-full bg-coral px-6 py-3 font-semibold text-navy hover:bg-coral/90 disabled:opacity-60">
+            <BusyLabel busy={saving} busyText="Saving...">{editing ? "Save shelf" : "Add shelf"}</BusyLabel>
           </button>
           {editing && <button type="button" onClick={reset} className="rounded-full border-2 border-navy px-6 py-3 font-semibold">Cancel</button>}
         </div>

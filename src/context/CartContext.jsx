@@ -53,6 +53,9 @@ export function CartProvider({ children }) {
   const { user, loading: authLoading } = useAuth();
   const userId = user?._id;
   const [items, setItems] = useState(readGuestCart);
+  // Which customer's cart has finished loading. Until it matches the signed-in customer we are
+  // "loading", which also covers the instant between login finishing and the request starting.
+  const [loadedFor, setLoadedFor] = useState(null);
   // Counts refresh calls so a slow, outdated response can never overwrite a newer one
   // (for example a cart that finishes loading just after the customer logged out).
   const latestRefresh = useRef(0);
@@ -64,14 +67,18 @@ export function CartProvider({ children }) {
       setItems(readGuestCart());
       return;
     }
-    const guestItems = readGuestCart();
-    // Merge anything collected while signed out, then clear the browser copy.
-    const data =
-      guestItems.length > 0
-        ? await api("/api/cart", { method: "POST", body: { bookIds: guestItems.map((book) => book._id) } })
-        : await api("/api/cart");
-    if (guestItems.length > 0) writeGuestCart([]);
-    if (thisRefresh === latestRefresh.current) setItems(data.cart.items);
+    try {
+      const guestItems = readGuestCart();
+      // Merge anything collected while signed out, then clear the browser copy.
+      const data =
+        guestItems.length > 0
+          ? await api("/api/cart", { method: "POST", body: { bookIds: guestItems.map((book) => book._id) } })
+          : await api("/api/cart");
+      if (guestItems.length > 0) writeGuestCart([]);
+      if (thisRefresh === latestRefresh.current) setItems(data.cart.items);
+    } finally {
+      if (thisRefresh === latestRefresh.current) setLoadedFor(userId);
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -127,8 +134,11 @@ export function CartProvider({ children }) {
       add,
       remove,
       refresh,
+      // True until we know what's really in the cart, so the cart page shows a skeleton
+      // instead of flashing "Your cart is empty" for a signed-in customer.
+      loading: authLoading || Boolean(userId && loadedFor !== userId),
     };
-  }, [items, add, remove, refresh]);
+  }, [items, add, remove, refresh, authLoading, userId, loadedFor]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

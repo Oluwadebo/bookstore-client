@@ -11,18 +11,40 @@
  */
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 
+// How many requests are in flight right now. The top loading bar listens to this, so every
+// page and every action gets a loading indicator without each one having to ask for it.
+let pending = 0;
+const listeners = new Set();
+const setPending = (change) => {
+  pending += change;
+  listeners.forEach((listener) => listener());
+};
+export const pendingRequests = {
+  subscribe(listener) {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  },
+  getSnapshot: () => pending,
+};
+
 /** Full URL for an API path. Used for file downloads, which are normal browser navigations. */
 export function apiUrl(path) {
   return `${BASE_URL}${path}`;
 }
 
 export async function api(path, { method = "GET", body } = {}) {
-  const response = await fetch(`${BASE_URL}${path}`, {
-    method,
-    credentials: "include",
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  setPending(1);
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      method,
+      credentials: "include",
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } finally {
+    setPending(-1);
+  }
 
   // Some responses (e.g. 204 No Content) have no body.
   const data = await response.json().catch(() => null);
@@ -41,6 +63,7 @@ export async function api(path, { method = "GET", body } = {}) {
  */
 export function upload(path, formData, onProgress) {
   return new Promise((resolve, reject) => {
+    setPending(1);
     const request = new XMLHttpRequest();
     request.open("POST", `${BASE_URL}${path}`);
     request.withCredentials = true; // send the login cookie
@@ -50,6 +73,7 @@ export function upload(path, formData, onProgress) {
         if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
       };
     }
+    request.onloadend = () => setPending(-1); // runs after both success and failure
     request.onload = () => {
       let data = null;
       try {

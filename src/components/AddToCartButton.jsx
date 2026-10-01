@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
+import { BusyLabel } from "./Loading.jsx";
 
 export default function AddToCartButton({ book }) {
   const { user } = useAuth();
@@ -52,7 +53,7 @@ export default function AddToCartButton({ book }) {
         disabled={busy}
         className="rounded-full bg-coral px-8 py-3 text-lg font-semibold text-navy hover:bg-coral/90 disabled:opacity-60"
       >
-        {busy ? "Adding..." : "Add to cart"}
+        <BusyLabel busy={busy} busyText="Adding...">Add to cart</BusyLabel>
       </button>
       {error && (
         <p role="alert" className="mt-2 text-sm font-semibold">

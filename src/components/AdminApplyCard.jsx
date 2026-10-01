@@ -6,6 +6,7 @@
  */
 import { useState } from "react";
 import { useConfirm } from "./ConfirmProvider.jsx";
+import { BusyLabel } from "./Loading.jsx";
 import Modal from "./Modal.jsx";
 import { api } from "../lib/api.js";
 import { useApi } from "../lib/useApi.js";
@@ -107,7 +108,7 @@ export default function AdminApplyCard() {
           <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setOpen(false)} className="rounded-full border-2 border-navy px-6 py-2.5 font-semibold hover:bg-navy/5">Cancel</button>
             <button disabled={busy} className="rounded-full bg-navy px-6 py-2.5 font-semibold text-cream hover:bg-navy/90 disabled:opacity-60">
-              {busy ? "Sending..." : "Send application"}
+              <BusyLabel busy={busy} busyText="Sending...">Send application</BusyLabel>
             </button>
           </div>
         </form>

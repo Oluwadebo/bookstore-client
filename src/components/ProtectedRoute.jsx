@@ -11,13 +11,14 @@
  */
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { PageLoader } from "./Loading.jsx";
 import { isOwner, isStaff } from "../lib/roles.js";
 
 export default function ProtectedRoute({ children, adminOnly = false, ownerOnly = false }) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) return <p className="px-4 py-24 text-center">Loading...</p>;
+  if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
   if (ownerOnly && !isOwner(user)) return <Navigate to="/admin" replace />;
   if (adminOnly && !isStaff(user)) return <Navigate to="/" replace />;

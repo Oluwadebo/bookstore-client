@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import BookCover from "../components/BookCover.jsx";
+import { BusyLabel, Skeleton, SkeletonRows } from "../components/Loading.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { api } from "../lib/api.js";
@@ -18,7 +19,7 @@ import { usePageTitle } from "../lib/usePageTitle.js";
 export default function CartPage() {
   usePageTitle("Your cart");
   const { user, refreshUser } = useAuth();
-  const { items, totalCents, currency, mixedCurrencies, remove, refresh } = useCart();
+  const { items, totalCents, currency, mixedCurrencies, remove, refresh, loading } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -51,6 +52,18 @@ export default function CartPage() {
       setError(err.message);
       setBusy(false);
     }
+  }
+
+  // Still finding out what is in the cart (e.g. right after a page reload while signed in).
+  if (loading && items.length === 0) {
+    return (
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:py-12">
+        <Skeleton className="h-10 w-48" />
+        <div className="mt-8">
+          <SkeletonRows count={2} label="Loading your cart" />
+        </div>
+      </main>
+    );
   }
 
   if (items.length === 0) {
@@ -114,7 +127,7 @@ export default function CartPage() {
               disabled={busy || mixedCurrencies}
               className="mt-6 w-full rounded-full bg-coral px-6 py-3 font-semibold text-navy hover:bg-coral/90 disabled:opacity-60"
             >
-              {busy ? "Please wait..." : "Checkout"}
+              <BusyLabel busy={busy} busyText="Taking you to payment...">Checkout</BusyLabel>
             </button>
           ) : (
             <div className="mt-6 space-y-2">

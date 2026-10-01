@@ -9,6 +9,7 @@
  */
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { BookLoader } from "../components/Loading.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { api } from "../lib/api.js";
@@ -73,6 +74,7 @@ export default function CheckoutCompletePage() {
     <main className="mx-auto max-w-xl px-4 py-24 text-center" aria-live="polite">
       {state.status === "checking" && (
         <>
+          <BookLoader label="Checking with your bank" className="mb-8" />
           <h1 className="font-display text-3xl font-bold">Confirming your payment...</h1>
           <p className="mt-3">This usually takes a few seconds. Please don't close this page.</p>
         </>

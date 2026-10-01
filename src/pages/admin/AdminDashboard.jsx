@@ -4,6 +4,7 @@
  * applications waiting. A regular admin sees numbers for their own books and shelves only.
  */
 import { Link } from "react-router-dom";
+import { SkeletonStats } from "../../components/Loading.jsx";
 import { formatPrice } from "../../lib/format.js";
 import { useApi } from "../../lib/useApi.js";
 import { usePageTitle } from "../../lib/usePageTitle.js";
@@ -23,7 +24,7 @@ export default function AdminDashboard() {
   const { data, error } = useApi("/api/admin/stats");
 
   if (error) return <p role="alert">Could not load the dashboard: {error}</p>;
-  if (!data) return <p>Loading...</p>;
+  if (!data) return <SkeletonStats />;
 
   const own = data.scope === "own"; // a regular admin: their own work only
 

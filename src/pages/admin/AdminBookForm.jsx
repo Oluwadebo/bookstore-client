@@ -1,26 +1,41 @@
 /**
  * Add or edit a book (/admin/books/new and /admin/books/:id).
  *
- * Adding is two steps: save the details (the book starts as a DRAFT), then upload the
- * cover and the book file on the same page. A book can only be published once its
- * file is uploaded, so customers can never pay for something they cannot receive.
- * Prices are typed in normal units (4.99) and saved in the smallest unit (499).
+ * Adding starts from the FILE: choose the PDF/EPUB and the server reads its title, author,
+ * description and cover, then creates a draft. This keeps listings honest: the book is tied to its
+ * file, and the same file can't be uploaded twice under different titles.
+ * (If there is no file yet, "enter the details by hand" still works.)
+ *
+ * Replacing a file offers a pop-up of the details found in it. A book can only be published once its
+ * file is uploaded. Prices are typed in normal units (4.99) and saved in the smallest unit (499).
  */
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import BookCover from "../../components/BookCover.jsx";
+import FileDetailsModal, { diffRows } from "../../components/admin/FileDetailsModal.jsx";
 import FileUpload from "../../components/admin/FileUpload.jsx";
+import { useConfirm } from "../../components/ConfirmProvider.jsx";
 import FormField from "../../components/FormField.jsx";
+import { BusyLabel, FormSkeleton } from "../../components/Loading.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 import { api } from "../../lib/api.js";
 import { formatBytes } from "../../lib/format.js";
+import { isOwner } from "../../lib/roles.js";
 import { useApi } from "../../lib/useApi.js";
 import { usePageTitle } from "../../lib/usePageTitle.js";
-import { useConfirm } from "../../components/ConfirmProvider.jsx";
-import { useAuth } from "../../context/AuthContext.jsx";
-import { isOwner } from "../../lib/roles.js";
 
 const EMPTY = { title: "", authors: "", description: "", price: "", currency: "", categories: [], tags: "", language: "en", publishedYear: "", featured: false, isPublished: false };
 const splitList = (text) => text.split(",").map((item) => item.trim()).filter(Boolean);
+const norm = (value) => String(value || "").trim().toLowerCase();
+const DETAIL_LABELS = { title: "title", authors: "author", description: "description", cover: "cover" };
+
+/** One friendly sentence about what was read from a new file. */
+function foundNotice(found) {
+  const keys = Object.keys(DETAIL_LABELS);
+  const got = keys.filter((key) => found[key]).map((key) => DETAIL_LABELS[key]);
+  const missing = keys.filter((key) => !found[key]).map((key) => DETAIL_LABELS[key]);
+  return `We read the file and filled in: ${got.length ? got.join(", ") : "nothing we could use"}.${missing.length ? ` Not found in the file: ${missing.join(", ")}.` : ""} Please check everything, set the price, then publish.`;
+}
 
 export default function AdminBookForm() {
   const { id } = useParams();
@@ -33,19 +48,23 @@ export default function AdminBookForm() {
   usePageTitle(isNew ? "Admin: add book" : "Admin: edit book");
 
   const loaded = useApi(isNew ? null : `/api/admin/books/${id}`);
-  const shelves = useApi("/api/categories");
+  const shelves = useApi("/api/categories"); // every shelf in the store: shelves are shared for filing books
   const book = loaded.data?.book;
 
   const [form, setForm] = useState(EMPTY);
+  const [manual, setManual] = useState(false); // adding by hand instead of from a file
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [reading, setReading] = useState(false); // fetching what the file says
+  const [fileDetails, setFileDetails] = useState({ open: false, found: null, applying: false, error: "" });
 
-  // After "Create book" we land here with { created: true }. The "add" and "edit" URLs share this
-  // component, so React keeps it alive between them; that is why this listens for the navigation
-  // instead of reading the flag only on first render.
+  // Messages passed along when we arrive here after creating a book. The "add" and "edit" URLs
+  // share this component, so React keeps it alive between them; that is why this listens for the
+  // navigation instead of reading the flag only on first render.
   useEffect(() => {
-    if (location.state?.created) setNotice("Book created as a draft. Now upload the cover and the book file below, then publish.");
+    if (location.state?.fromFile) setNotice(foundNotice(location.state.fromFile));
+    else if (location.state?.created) setNotice("Book created as a draft. Now upload the cover and the book file below, then publish.");
   }, [location.state]);
 
   // Fill the form once, when the book first loads. (Later reloads, such as after an
@@ -91,9 +110,26 @@ export default function AdminBookForm() {
     event.preventDefault();
     setError("");
     setNotice("");
+
+    let payload;
+    try {
+      payload = buildPayload();
+    } catch (err) {
+      return setError(err.message);
+    }
+
+    // A forgotten price would quietly make the book free, so ask before publishing at 0.
+    if (!isNew && payload.isPublished && payload.priceCents === 0 && (!book.isPublished || book.priceCents !== 0)) {
+      const ok = await confirm({
+        title: "Publish this book for free?",
+        message: <>The price is 0, so customers will get <strong>{form.title}</strong> without paying. Is that what you want?</>,
+        confirmLabel: "Yes, publish for free",
+      });
+      if (!ok) return;
+    }
+
     setSaving(true);
     try {
-      const payload = buildPayload();
       if (isNew) {
         const data = await api("/api/admin/books", { method: "POST", body: payload });
         navigate(`/admin/books/${data.book._id}`, { state: { created: true }, replace: true });
@@ -126,22 +162,102 @@ export default function AdminBookForm() {
     }
   }
 
+  // ---- details found inside the file ----
+
+  const currentValues = () => ({ title: form.title, authors: form.authors, description: form.description, coverUrl: book?.coverUrl || "" });
+
+  /** Ask the server what the file says. With onlyIfDifferent the pop-up opens only if there is something new. */
+  async function openFileDetails({ onlyIfDifferent = false } = {}) {
+    setReading(true);
+    setError("");
+    try {
+      const data = await api(`/api/admin/books/${id}/file-details`);
+      if (onlyIfDifferent && !diffRows(data.file, currentValues()).some((row) => row.available && row.differs)) return;
+      setFileDetails({ open: true, found: data.file, applying: false, error: "" });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setReading(false);
+    }
+  }
+
+  async function applyFileDetails(fields) {
+    setFileDetails((state) => ({ ...state, applying: true, error: "" }));
+    try {
+      const data = await api(`/api/admin/books/${id}/apply-file-details`, { method: "POST", body: { fields } });
+      // Update only the fields that were applied, so anything else being typed is kept.
+      setForm((current) => ({
+        ...current,
+        ...(data.applied.includes("title") && { title: data.book.title }),
+        ...(data.applied.includes("authors") && { authors: data.book.authors.join(", ") }),
+        ...(data.applied.includes("description") && { description: data.book.description || "" }),
+      }));
+      await loaded.reload();
+      setFileDetails({ open: false, found: null, applying: false, error: "" });
+      setNotice(data.applied.length ? `Updated from the file: ${data.applied.map((key) => DETAIL_LABELS[key]).join(", ")}.` : "Nothing in the file to apply.");
+    } catch (err) {
+      setFileDetails((state) => ({ ...state, applying: false, error: err.message }));
+    }
+  }
+
   if (!isNew && loaded.error) return <p role="alert">Could not load this book: {loaded.error}</p>;
-  if (!isNew && !book) return <p>Loading...</p>;
+  if (!isNew && !book) return <FormSkeleton />;
+
+  // ---- adding a new book: start from the file ----
+  if (isNew && !manual) {
+    return (
+      <div className="mx-auto max-w-2xl rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="font-display text-2xl font-bold">Add a book</h2>
+          <Link to="/admin/books" className="text-sm font-semibold underline">Back to books</Link>
+        </div>
+        <p className="mt-3">
+          Start with the book file. We read its title, author, description and cover for you, so you only need to add the price and shelves.
+          A file that is already in the store can't be added again.
+        </p>
+        <div className="mt-6">
+          <FileUpload
+            label="Choose the book file (PDF or EPUB)"
+            hint="EPUB files give the most details, including the cover. PDFs usually only carry a title and author, if that."
+            accept=".pdf,.epub,application/pdf,application/epub+zip"
+            field="file"
+            endpoint="/api/admin/books/from-file"
+            onDone={(data) => navigate(`/admin/books/${data.book._id}`, { replace: true, state: { fromFile: data.found } })}
+          />
+        </div>
+        <button type="button" onClick={() => setManual(true)} className="mt-8 text-sm font-semibold underline">
+          I don't have the file yet. Enter the details by hand
+        </button>
+      </div>
+    );
+  }
 
   const canPublish = book?.hasFile;
+  const titleMismatch = book?.fileTitle && norm(book.fileTitle) !== norm(form.title);
   const field = "w-full rounded-xl border border-navy/20 bg-white px-4 py-3 text-base outline-none focus:border-coral focus:ring-2 focus:ring-coral/40";
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
       <form onSubmit={handleSubmit} className="space-y-5 rounded-3xl bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="font-display text-2xl font-bold">{isNew ? "Add a book" : "Edit book"}</h2>
+          <h2 className="font-display text-2xl font-bold">{isNew ? "Add a book by hand" : "Edit book"}</h2>
           <Link to="/admin/books" className="text-sm font-semibold underline">Back to books</Link>
         </div>
 
-        <FormField label="Title" id="title" value={form.title} onChange={update} required maxLength={200} />
-        <FormField label="Author(s), separated by commas" id="authors" value={form.authors} onChange={update} required />
+        <div>
+          <FormField label="Title" id="title" value={form.title} onChange={update} required maxLength={200} />
+          {titleMismatch && (
+            <p role="status" className="mt-2 rounded-xl bg-sunshine/40 px-4 py-3 text-sm">
+              The file itself is titled <strong>"{book.fileTitle}"</strong>. A book sold under a different title than its file can confuse customers.{" "}
+              <button type="button" onClick={() => setForm({ ...form, title: book.fileTitle })} className="font-semibold underline">Use the file's title</button>
+            </p>
+          )}
+        </div>
+
+        <div>
+          <FormField label="Author(s), separated by commas" id="authors" value={form.authors} onChange={update} required />
+          {norm(form.authors) === "unknown author" && <p className="mt-1 text-sm font-semibold">The file didn't say who wrote it. Please type the author's name.</p>}
+        </div>
 
         <div>
           <label htmlFor="description" className="mb-1 block text-sm font-semibold">Description</label>
@@ -154,7 +270,7 @@ export default function AdminBookForm() {
         </div>
 
         <fieldset>
-          <legend className="mb-2 text-sm font-semibold">Shelves</legend>
+          <legend className="mb-2 text-sm font-semibold">Shelves (you can use any shelf in the store)</legend>
           <div className="flex flex-wrap gap-2">
             {shelves.data?.categories.map((shelf) => (
               <label key={shelf._id} className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${form.categories.includes(shelf._id) ? "border-navy bg-navy text-cream" : "border-navy/20 bg-white"}`}>
@@ -193,7 +309,7 @@ export default function AdminBookForm() {
 
         <div className="flex flex-wrap gap-3">
           <button disabled={saving} className="rounded-full bg-coral px-8 py-3 font-semibold text-navy hover:bg-coral/90 disabled:opacity-60">
-            {saving ? "Saving..." : isNew ? "Create book" : "Save changes"}
+            <BusyLabel busy={saving} busyText="Saving...">{isNew ? "Create book" : "Save changes"}</BusyLabel>
           </button>
           {!isNew && book.isPublished && (
             <Link to={`/books/${book.slug}`} className="rounded-full border-2 border-navy px-6 py-3 font-semibold hover:bg-navy hover:text-cream">View in store</Link>
@@ -221,8 +337,23 @@ export default function AdminBookForm() {
                 {book.hasFile ? `Uploaded: ${book.format.toUpperCase()}, ${formatBytes(book.fileSizeBytes)}` : "No file yet. Customers cannot buy this book until you upload one."}
               </p>
               <div className="mt-4">
-                <FileUpload label={book.hasFile ? "Replace the file" : "Upload the book file"} hint="PDF or EPUB. Customers who already own the book will get the new file." accept=".pdf,.epub,application/pdf,application/epub+zip" field="file" endpoint={`/api/admin/books/${id}/file`} onDone={loaded.reload} />
+                <FileUpload
+                  label={book.hasFile ? "Replace the file" : "Upload the book file"}
+                  hint="PDF or EPUB. Customers who already own the book will get the new file. A file already in the store is refused."
+                  accept=".pdf,.epub,application/pdf,application/epub+zip"
+                  field="file"
+                  endpoint={`/api/admin/books/${id}/file`}
+                  onDone={async () => {
+                    await loaded.reload();
+                    await openFileDetails({ onlyIfDifferent: true }); // offer the file's own title, description and cover
+                  }}
+                />
               </div>
+              {book.hasFile && (
+                <button type="button" onClick={() => openFileDetails()} disabled={reading} className="mt-4 w-full rounded-full border-2 border-navy px-4 py-2 text-sm font-semibold hover:bg-navy/5 disabled:opacity-60">
+                  <BusyLabel busy={reading} busyText="Reading the file...">Use details from the file</BusyLabel>
+                </button>
+              )}
             </div>
 
             {owner ? (
@@ -235,6 +366,16 @@ export default function AdminBookForm() {
           </>
         )}
       </aside>
+
+      <FileDetailsModal
+        open={fileDetails.open}
+        onClose={() => setFileDetails((state) => ({ ...state, open: false }))}
+        found={fileDetails.found}
+        current={currentValues()}
+        onApply={applyFileDetails}
+        busy={fileDetails.applying}
+        error={fileDetails.error}
+      />
     </div>
   );
 }

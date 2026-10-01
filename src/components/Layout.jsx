@@ -3,11 +3,13 @@
  * (<Outlet /> is where the matched route renders), footer at the bottom.
  */
 import { Outlet } from "react-router-dom";
+import { TopLoadingBar } from "./Loading.jsx";
 import Navbar from "./Navbar.jsx";
 
 export default function Layout() {
   return (
     <div className="flex min-h-screen flex-col">
+      <TopLoadingBar />
       <Navbar />
       <div className="flex-1">
         <Outlet />

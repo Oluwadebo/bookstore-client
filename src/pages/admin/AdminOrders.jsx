@@ -1,5 +1,6 @@
 /** Orders (/admin/orders): who bought what, and whether the payment went through. */
 import { useState } from "react";
+import { SkeletonRows } from "../../components/Loading.jsx";
 import Pagination from "../../components/Pagination.jsx";
 import { formatPrice } from "../../lib/format.js";
 import { useApi } from "../../lib/useApi.js";
@@ -30,7 +31,11 @@ export default function AdminOrders() {
       </div>
 
       {error && <p role="alert" className="mt-6">Could not load orders: {error}</p>}
-      {loading && !data && <p className="mt-6">Loading...</p>}
+      {loading && !data && (
+        <div className="mt-6">
+          <SkeletonRows label="Loading orders" />
+        </div>
+      )}
       {data && data.orders.length === 0 && <p className="mt-6 rounded-2xl bg-white p-6 text-center">No orders yet.</p>}
 
       <ul className={`mt-6 space-y-3 ${loading && data ? "opacity-60" : ""}`}>

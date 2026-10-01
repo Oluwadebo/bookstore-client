@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import FormField from "../components/FormField.jsx";
+import { BusyLabel } from "../components/Loading.jsx";
 import PasswordField from "../components/PasswordField.jsx";
 
 export default function LoginPage() {
@@ -51,7 +52,7 @@ export default function LoginPage() {
         )}
 
         <button type="submit" disabled={submitting} className="w-full rounded-full bg-coral px-6 py-3 font-semibold text-navy hover:bg-coral/90 disabled:opacity-60">
-          {submitting ? "Logging in..." : "Log in"}
+          <BusyLabel busy={submitting} busyText="Logging in...">Log in</BusyLabel>
         </button>
       </form>
 

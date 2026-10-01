@@ -11,6 +11,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import BookGrid from "../components/BookGrid.jsx";
 import BookGridSkeleton from "../components/BookGridSkeleton.jsx";
 import CategoryChips from "../components/CategoryChips.jsx";
+import { Skeleton } from "../components/Loading.jsx";
 import Pagination from "../components/Pagination.jsx";
 import { summarise } from "../lib/format.js";
 import { useApi } from "../lib/useApi.js";
@@ -70,7 +71,7 @@ export default function BrowsePage() {
       {!notFound && (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm font-semibold">
-            {books.loading ? "Loading..." : data ? `${data.total} ${data.total === 1 ? "book" : "books"}` : "\u00A0"}
+            {books.loading ? <Skeleton className="h-4 w-16" /> : data ? `${data.total} ${data.total === 1 ? "book" : "books"}` : "\u00A0"}
           </p>
           <label className="flex items-center gap-2 text-sm font-semibold">
             Sort by

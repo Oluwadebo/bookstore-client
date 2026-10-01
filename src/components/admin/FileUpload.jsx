@@ -1,10 +1,11 @@
 /**
  * A file picker that uploads as soon as a file is chosen and shows progress.
  * Props: label, hint, accept (allowed types), field (form field name the server expects),
- * endpoint (API path), onDone (called after a successful upload, e.g. to reload the book).
+ * endpoint (API path), onDone (called with the server's response after a successful upload).
  */
 import { useState } from "react";
 import { upload } from "../../lib/api.js";
+import { Spinner } from "../Loading.jsx";
 
 export default function FileUpload({ label, hint, accept, field, endpoint, onDone }) {
   const [progress, setProgress] = useState(null); // null = idle, 0-100 = uploading
@@ -21,8 +22,8 @@ export default function FileUpload({ label, hint, accept, field, endpoint, onDon
     try {
       const form = new FormData();
       form.append(field, file);
-      await upload(endpoint, form, setProgress);
-      await onDone();
+      const data = await upload(endpoint, form, setProgress);
+      await onDone(data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -49,7 +50,13 @@ export default function FileUpload({ label, hint, accept, field, endpoint, onDon
           <div className="h-2 overflow-hidden rounded-full bg-navy/10">
             <div className="h-full bg-teal transition-all" style={{ width: `${progress}%` }} />
           </div>
-          <p className="mt-1 text-xs font-semibold">{progress < 100 ? `Uploading... ${progress}%` : "Checking the file..."}</p>
+          <p className="mt-1 text-xs font-semibold">{progress < 100 ? (
+              `Uploading... ${progress}%`
+            ) : (
+              <span className="inline-flex items-center gap-2">
+                <Spinner className="h-3 w-3" /> Reading the file...
+              </span>
+            )}</p>
         </div>
       )}
       {error && <p role="alert" className="mt-2 text-sm font-semibold text-red-700">{error}</p>}

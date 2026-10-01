@@ -5,6 +5,8 @@
  */
 import { Link } from "react-router-dom";
 import BookGrid from "../components/BookGrid.jsx";
+import BookGridSkeleton from "../components/BookGridSkeleton.jsx";
+import { SkeletonCards } from "../components/Loading.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import { useApi } from "../lib/useApi.js";
 import { usePageTitle } from "../lib/usePageTitle.js";
@@ -45,6 +47,7 @@ export default function HomePage() {
       {/* Shelves */}
       <Section title="Browse the shelves">
         {shelves.error && <p role="alert">Could not load the shelves. {shelves.error}</p>}
+        {shelves.loading && !shelves.data && <SkeletonCards />}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {shelves.data?.categories.map((category) => (
             <Link
@@ -65,6 +68,11 @@ export default function HomePage() {
       </Section>
 
       {/* Featured */}
+      {featured.loading && !featured.data && (
+        <Section title="Featured reads">
+          <BookGridSkeleton count={4} />
+        </Section>
+      )}
       {featured.data?.books.length > 0 && (
         <Section title="Featured reads">
           <BookGrid books={featured.data.books} />
@@ -80,7 +88,7 @@ export default function HomePage() {
           </Link>
         }
       >
-        {newest.loading && !newest.data && <p>Loading books...</p>}
+        {newest.loading && !newest.data && <BookGridSkeleton count={8} />}
         {newest.error && <p role="alert">Could not load books. Is the server running?</p>}
         {newest.data && <BookGrid books={newest.data.books} />}
       </Section>

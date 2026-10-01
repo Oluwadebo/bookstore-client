@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import BookCover from "../../components/BookCover.jsx";
+import { SkeletonRows } from "../../components/Loading.jsx";
 import Pagination from "../../components/Pagination.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { formatPrice } from "../../lib/format.js";
@@ -65,7 +66,11 @@ export default function AdminBooks() {
       </div>
 
       {error && <p role="alert" className="mt-6">Could not load books: {error}</p>}
-      {loading && !data && <p className="mt-6">Loading...</p>}
+      {loading && !data && (
+        <div className="mt-6">
+          <SkeletonRows label="Loading books" />
+        </div>
+      )}
       {data && data.books.length === 0 && (
         <p className="mt-6 rounded-2xl bg-white p-6 text-center">
           {!owner && !search && !status ? "You haven't added any books yet. Click Add book to start." : "No books found."}
