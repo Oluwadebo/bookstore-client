@@ -53,6 +53,13 @@ export function CartProvider({ children }) {
   const { user, loading: authLoading } = useAuth();
   const userId = user?._id;
   const [items, setItems] = useState(readGuestCart);
+  // The payment processing fee the server adds on top of the list prices (signed-in customers only;
+  // a guest's cart is only in this browser, so the server hasn't priced it yet).
+  const [fee, setFee] = useState(null);
+  const applyCart = useCallback((cart) => {
+    setItems(cart.items);
+    setFee({ processingFeeCents: cart.processingFeeCents ?? 0, payableCents: cart.payableCents ?? cart.totalCents });
+  }, []);
   // Which customer's cart has finished loading. Until it matches the signed-in customer we are
   // "loading", which also covers the instant between login finishing and the request starting.
   const [loadedFor, setLoadedFor] = useState(null);
@@ -65,6 +72,7 @@ export function CartProvider({ children }) {
     const thisRefresh = ++latestRefresh.current;
     if (!userId) {
       setItems(readGuestCart());
+      setFee(null);
       return;
     }
     try {
@@ -75,11 +83,11 @@ export function CartProvider({ children }) {
           ? await api("/api/cart", { method: "POST", body: { bookIds: guestItems.map((book) => book._id) } })
           : await api("/api/cart");
       if (guestItems.length > 0) writeGuestCart([]);
-      if (thisRefresh === latestRefresh.current) setItems(data.cart.items);
+      if (thisRefresh === latestRefresh.current) applyCart(data.cart);
     } finally {
       if (thisRefresh === latestRefresh.current) setLoadedFor(userId);
     }
-  }, [userId]);
+  }, [userId, applyCart]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -92,7 +100,7 @@ export function CartProvider({ children }) {
     async (book) => {
       if (userId) {
         const data = await api("/api/cart", { method: "POST", body: { bookId: book._id } });
-        setItems(data.cart.items);
+        applyCart(data.cart);
         return;
       }
       setItems((previous) => {
@@ -102,14 +110,14 @@ export function CartProvider({ children }) {
         return next;
       });
     },
-    [userId]
+    [userId, applyCart]
   );
 
   const remove = useCallback(
     async (bookId) => {
       if (userId) {
         const data = await api(`/api/cart/${bookId}`, { method: "DELETE" });
-        setItems(data.cart.items);
+        applyCart(data.cart);
         return;
       }
       setItems((previous) => {
@@ -118,7 +126,7 @@ export function CartProvider({ children }) {
         return next;
       });
     },
-    [userId]
+    [userId, applyCart]
   );
 
   const value = useMemo(() => {
@@ -134,11 +142,12 @@ export function CartProvider({ children }) {
       add,
       remove,
       refresh,
+      fee, // { processingFeeCents, payableCents } or null for a guest
       // True until we know what's really in the cart, so the cart page shows a skeleton
       // instead of flashing "Your cart is empty" for a signed-in customer.
       loading: authLoading || Boolean(userId && loadedFor !== userId),
     };
-  }, [items, add, remove, refresh, authLoading, userId, loadedFor]);
+  }, [items, add, remove, refresh, authLoading, userId, loadedFor, fee]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

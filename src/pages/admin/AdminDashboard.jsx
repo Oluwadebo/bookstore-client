@@ -35,11 +35,16 @@ export default function AdminDashboard() {
           {data.pendingAdminRequests} {data.pendingAdminRequests === 1 ? "person has" : "people have"} applied to be an admin. Review now
         </Link>
       )}
-      {own && <p className="mb-4 text-sm opacity-80">These numbers cover the books and shelves you added.</p>}
+      {data.pendingShelfRequests > 0 && (
+        <Link to="/admin/categories" className="mb-6 block rounded-2xl bg-sunshine/50 px-5 py-4 font-semibold hover:bg-sunshine/70">
+          {data.pendingShelfRequests} {data.pendingShelfRequests === 1 ? "shelf request is" : "shelf requests are"} waiting for you. Review now
+        </Link>
+      )}
+      {own && <p className="mb-4 text-sm opacity-80">The book numbers cover the books you added.</p>}
 
       <div className={`grid gap-4 sm:grid-cols-2 ${own ? "" : "lg:grid-cols-4"}`}>
         <Stat label={own ? "Your books" : "Books"} value={data.books} note={`${data.published} published, ${data.drafts} drafts`} />
-        <Stat label={own ? "Your shelves" : "Shelves"} value={data.categories} />
+        <Stat label={own ? "Shelves in the store" : "Shelves"} value={data.categories} />
         {!own && <Stat label="Customers" value={data.customers} />}
         {/* Amounts in different currencies cannot be added together, so each gets its own line. */}
         {!own && (
@@ -61,7 +66,7 @@ export default function AdminDashboard() {
           Add a book
         </Link>
         <Link to="/admin/categories" className="rounded-full border-2 border-navy px-6 py-3 font-semibold hover:bg-navy hover:text-cream">
-          {own ? "My shelves" : "Manage shelves"}
+          {own ? "See shelves" : "Manage shelves"}
         </Link>
       </div>
     </>

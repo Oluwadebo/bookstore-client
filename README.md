@@ -3,8 +3,9 @@
 The customer-facing website for the online bookstore, built with **React, Vite and Tailwind CSS**.
 It talks to the API in `../server`.
 
-> **Status:** Step 5 of 6 - storefront, login/signup, cart, checkout, customer library, and the
-> admin area with owner-approved admins. Final polish and hand-off come next.
+> **Status:** Step 5 of 6 - storefront, login/signup (with password reset), cart with processing fee, checkout,
+> customer library, and a marketplace admin area (sellers, commission, earnings, statements, payouts, shelf
+> requests). Final polish and hand-off come next.
 
 ## Requirements
 
@@ -81,7 +82,7 @@ client/
 | `/cart` | Cart and checkout button |
 | `/checkout/complete` | Where the payment page returns the customer (members only) |
 | `/library` | Purchased books with download buttons (members only) |
-| `/admin` | Admin dashboard (admins only). Sub-pages: `/admin/books`, `/admin/books/new`, `/admin/books/:id`, `/admin/categories`, and `/admin/orders` and `/admin/team` (both owner only) |
+| `/admin` | Admin dashboard (admins only). Sub-pages: `/admin/books`, `/admin/books/new`, `/admin/books/:id`, `/admin/categories`, `/admin/sales` (an admin's own earnings), and `/admin/orders`, `/admin/earnings`, `/admin/earnings/:sellerId` and `/admin/team` (all owner only). Public: `/forgot-password` and `/reset-password` |
 
 Shelves, chips and menus come from the database, so adding a category (for example a
 non-fiction or educational shelf) makes it appear everywhere with no code change.
@@ -114,8 +115,11 @@ and image. Per-page previews would need server-side rendering or pre-rendering. 
 ## Admin area
 
 Reached at `/admin` (an "Admin" link appears in the header for admin accounts). The screens are
-Dashboard, Books (list, add, edit, upload cover and file, publish), Shelves, and Orders.
-Admins and the owner can use it; customers can't. A regular admin only sees the books and shelves they created. The owner sees everything, and alone has Orders, Team, and deleting books and shelves.
+Dashboard, Books (list, add, edit, upload cover and file, publish), Shelves, and My sales for admins; the owner
+also has Orders, Earnings and Team. Admins and the owner can use it; customers can't. A regular admin only sees
+the books they created and can only look at shelves (requesting new ones). Only the owner creates shelves, deletes
+books, sees orders, sets the commission, records payouts and approves admins. The earnings pages print cleanly
+(header, tabs and buttons hide themselves with `print:hidden`) and statements download as CSV.
 Access is checked twice: the page hides itself from non-admins, and the server refuses admin
 requests from anyone who isn't an admin. See `../docs/ADMIN-GUIDE.md` for the store owner's guide.
 

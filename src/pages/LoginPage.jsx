@@ -44,6 +44,9 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="mt-8 space-y-4 rounded-3xl bg-white p-6 shadow-sm">
         <FormField label="Email" id="email" type="email" autoComplete="email" required value={form.email} onChange={update} />
         <PasswordField label="Password" id="password" autoComplete="current-password" required value={form.password} onChange={update} />
+        <div className="-mt-2 text-right">
+          <Link to="/forgot-password" className="text-sm font-semibold underline">Forgot password?</Link>
+        </div>
 
         {error && (
           <p role="alert" className="rounded-xl bg-coral/15 px-4 py-3 text-sm font-semibold">

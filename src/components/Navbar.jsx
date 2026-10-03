@@ -18,7 +18,7 @@ export default function Navbar() {
   const link = "rounded-full px-3 py-2 hover:bg-navy/5";
 
   return (
-    <header className="sticky top-0 z-20 border-b border-navy/10 bg-cream/95 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-navy/10 bg-cream/95 backdrop-blur print:hidden">
       <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold">
           <img src="/favicon.svg" alt="" className="h-8 w-8" />

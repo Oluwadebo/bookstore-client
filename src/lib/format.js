@@ -8,7 +8,11 @@
 const LOCALES = { NGN: "en-NG" };
 
 export function formatPrice(priceCents, currency = "USD") {
-  if (priceCents === 0) return "Free";
+  return priceCents === 0 ? "Free" : formatMoney(priceCents, currency);
+}
+
+/** Like formatPrice, but zero shows as an amount ("N0"), for balances, totals and fees. */
+export function formatMoney(priceCents, currency = "USD") {
   const amount = priceCents / 100;
   const options = { style: "currency", currency };
   // Whole-naira prices read better without ".00".

@@ -14,7 +14,7 @@ export default function Layout() {
       <div className="flex-1">
         <Outlet />
       </div>
-      <footer className="border-t border-navy/10 px-4 py-6 text-center text-sm">
+      <footer className="border-t border-navy/10 px-4 py-6 text-center text-sm print:hidden">
         &copy; {new Date().getFullYear()} Bookstore. Happy reading.
       </footer>
     </div>

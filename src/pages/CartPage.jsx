@@ -13,13 +13,14 @@ import { BusyLabel, Skeleton, SkeletonRows } from "../components/Loading.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { api } from "../lib/api.js";
-import { formatPrice } from "../lib/format.js";
+import { formatMoney, formatPrice } from "../lib/format.js";
 import { usePageTitle } from "../lib/usePageTitle.js";
 
 export default function CartPage() {
   usePageTitle("Your cart");
   const { user, refreshUser } = useAuth();
-  const { items, totalCents, currency, mixedCurrencies, remove, refresh, loading } = useCart();
+  const { items, totalCents, currency, mixedCurrencies, remove, refresh, loading, fee } = useCart();
+  const showFee = Boolean(fee && fee.processingFeeCents > 0 && !mixedCurrencies);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -104,10 +105,20 @@ export default function CartPage() {
         </ul>
 
         <aside className="h-fit rounded-2xl bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between text-lg font-bold">
-            <span>Total</span>
-            <span>{mixedCurrencies ? "-" : formatPrice(totalCents, currency)}</span>
-          </div>
+          {showFee ? (
+            <dl className="space-y-2">
+              <div className="flex justify-between"><dt>Books</dt><dd>{formatMoney(totalCents, currency)}</dd></div>
+              <div className="flex justify-between"><dt>Payment processing fee</dt><dd>{formatMoney(fee.processingFeeCents, currency)}</dd></div>
+              <div className="flex justify-between border-t border-navy/10 pt-2 text-lg font-bold"><dt>Total to pay</dt><dd>{formatMoney(fee.payableCents, currency)}</dd></div>
+            </dl>
+          ) : (
+            <div className="flex items-center justify-between text-lg font-bold">
+              <span>Total</span>
+              <span>{mixedCurrencies ? "-" : formatPrice(totalCents, currency)}</span>
+            </div>
+          )}
+          {showFee && <p className="mt-2 text-xs opacity-70">The fee is charged on card payments, so the book prices stay as listed.</p>}
+          {!user && items.length > 0 && !mixedCurrencies && <p className="mt-2 text-xs opacity-70">A small payment processing fee is added at checkout.</p>}
           <p className="mt-2 text-sm opacity-80">Digital books. They appear in your library as soon as payment is confirmed.</p>
 
           {mixedCurrencies && (

@@ -23,6 +23,11 @@ import AdminBookForm from "./pages/admin/AdminBookForm.jsx";
 import AdminCategories from "./pages/admin/AdminCategories.jsx";
 import AdminOrders from "./pages/admin/AdminOrders.jsx";
 import AdminTeam from "./pages/admin/AdminTeam.jsx";
+import AdminSales from "./pages/admin/AdminSales.jsx";
+import AdminEarnings from "./pages/admin/AdminEarnings.jsx";
+import AdminSellerDetail from "./pages/admin/AdminSellerDetail.jsx";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
+import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 
 function NotFound() {
   return (
@@ -63,6 +68,8 @@ export default function App() {
         />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route
           path="/account"
           element={
@@ -85,6 +92,25 @@ export default function App() {
           <Route path="books/new" element={<AdminBookForm />} />
           <Route path="books/:id" element={<AdminBookForm />} />
           <Route path="categories" element={<AdminCategories />} />
+          {/* An admin's own earnings. (The owner has the Earnings screen instead.) */}
+          <Route path="sales" element={<AdminSales />} />
+          {/* Money overview, commission and payouts: the owner's business. */}
+          <Route
+            path="earnings"
+            element={
+              <ProtectedRoute ownerOnly>
+                <AdminEarnings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="earnings/:sellerId"
+            element={
+              <ProtectedRoute ownerOnly>
+                <AdminSellerDetail />
+              </ProtectedRoute>
+            }
+          />
           {/* Sales and customer details are the owner's business. */}
           <Route
             path="orders"

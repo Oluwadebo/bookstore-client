@@ -47,7 +47,10 @@ export default function AdminOrders() {
             </div>
             <p className="mt-1 font-semibold">{order.user ? `${order.user.name} (${order.user.email})` : "Deleted customer"}</p>
             <p className="text-sm">{order.items.map((item) => item.title).join(", ")}</p>
-            <p className="mt-1 font-bold">{formatPrice(order.totalCents, order.currency)}</p>
+            <p className="mt-1 font-bold">
+              {formatPrice(order.totalCents, order.currency)}
+              {order.processingFeeCents > 0 && <span className="ml-2 text-sm font-normal opacity-70">(includes {formatPrice(order.processingFeeCents, order.currency)} payment fee)</span>}
+            </p>
           </li>
         ))}
       </ul>
