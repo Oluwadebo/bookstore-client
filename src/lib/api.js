@@ -9,7 +9,7 @@
  * - Throws an Error with the server's message when the response is not OK,
  *   so components can simply try/catch and show `error.message`.
  */
-const BASE_URL = import.meta.env.VITE_API_URL || "";
+const BASE_URL = import.meta.env.VITE_API_URL || "https://bookstore-server-j3th.onrender.com";
 
 // How many requests are in flight right now. The top loading bar listens to this, so every
 // page and every action gets a loading indicator without each one having to ask for it.
