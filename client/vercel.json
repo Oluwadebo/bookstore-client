@@ -1,0 +1,6 @@
+   {
+     "rewrites": [
+       { "source": "/api/:path*", "destination": "https://bookstore-server-j3th.onrender.com/api/:path*" },
+       { "source": "/(.*)", "destination": "/index.html" }
+     ]
+   }
